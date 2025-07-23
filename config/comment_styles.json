@@ -1,0 +1,152 @@
+{
+  "comment_styles": {
+    "grammar": {
+      "color": "DC143C",
+      "font_size": "18",
+      "style": "bold",
+      "icon": "📝",
+      "priority": "high"
+    },
+    "style": {
+      "color": "FF8C00", 
+      "font_size": "18",
+      "style": "italic",
+      "icon": "✨",
+      "priority": "medium"
+    },
+    "clarity": {
+      "color": "228B22",
+      "font_size": "18", 
+      "style": "normal",
+      "icon": "💡",
+      "priority": "medium"
+    },
+    "academic": {
+      "color": "4169E1",
+      "font_size": "18",
+      "style": "bold",
+      "icon": "🎓", 
+      "priority": "high"
+    },
+    "structure": {
+      "color": "9370DB",
+      "font_size": "18",
+      "style": "bold",
+      "icon": "🗂️",
+      "priority": "high"
+    },
+    "references": {
+      "color": "20B2AA",
+      "font_size": "18", 
+      "style": "normal",
+      "icon": "📚",
+      "priority": "high"
+    },
+    "methodology": {
+      "color": "FF6347",
+      "font_size": "18",
+      "style": "bold", 
+      "icon": "🔬",
+      "priority": "high"
+    },
+    "formatting": {
+      "color": "708090",
+      "font_size": "16",
+      "style": "italic",
+      "icon": "🎨",
+      "priority": "low"
+    }
+  },
+  "author_settings": {
+    "name": "KI Korrekturtool",
+    "initials": "KI",
+    "company": "AI-Lektorat",
+    "version": "2.0 Professional"
+  },
+  "global_settings": {
+    "default_font_family": "Calibri",
+    "comment_box_width": "300",
+    "comment_opacity": "0.9",
+    "enable_icons": true,
+    "enable_priority_colors": true,
+    "enable_category_grouping": true
+  },
+  "theme_presets": {
+    "professional": {
+      "description": "Professionelle Farben für Abschlussarbeiten",
+      "colors": {
+        "grammar": "8B0000",
+        "style": "FF6347", 
+        "clarity": "32CD32",
+        "academic": "4169E1",
+        "structure": "9370DB",
+        "references": "20B2AA",
+        "methodology": "FF4500",
+        "formatting": "696969"
+      }
+    },
+    "high_contrast": {
+      "description": "Hoher Kontrast für bessere Sichtbarkeit",
+      "colors": {
+        "grammar": "FF0000",
+        "style": "FF8C00",
+        "clarity": "00FF00", 
+        "academic": "0000FF",
+        "structure": "8A2BE2",
+        "references": "00CED1",
+        "methodology": "FF1493",
+        "formatting": "000000"
+      }
+    },
+    "pastel": {
+      "description": "Sanfte Pastellfarben",
+      "colors": {
+        "grammar": "FFB6C1",
+        "style": "FFDAB9",
+        "clarity": "98FB98",
+        "academic": "87CEEB", 
+        "structure": "DDA0DD",
+        "references": "AFEEEE",
+        "methodology": "FFA07A",
+        "formatting": "D3D3D3"
+      }
+    }
+  },
+  "priority_settings": {
+    "high": {
+      "font_weight": "bold",
+      "border_style": "solid",
+      "border_width": "2px",
+      "highlight": true
+    },
+    "medium": {
+      "font_weight": "normal", 
+      "border_style": "dashed",
+      "border_width": "1px",
+      "highlight": false
+    },
+    "low": {
+      "font_weight": "normal",
+      "border_style": "dotted", 
+      "border_width": "1px",
+      "highlight": false
+    }
+  },
+  "custom_templates": {
+    "academic_detailed": {
+      "prefix": "📋 {category_name}:",
+      "format": "{icon} {suggested_text}\n\n💭 Begründung: {reason}\n\n⚡ Priorität: {priority}",
+      "footer": "\n---\n🤖 KI Korrekturtool v2.0"
+    },
+    "simple": {
+      "prefix": "{category_name}:",
+      "format": "{suggested_text} - {reason}",
+      "footer": ""
+    },
+    "detailed": {
+      "prefix": "🔍 {category_name} | Konfidenz: {confidence}%",
+      "format": "✏️ Vorschlag: {suggested_text}\n\n📝 Begründung: {reason}\n\n📊 Original: \"{original_text}\"",
+      "footer": "\n\n🎯 Automatisch generiert"
+    }
+  }
+}
