@@ -24,6 +24,24 @@ python main_complete_advanced.py "path/to/document.docx"
 python main_performance_optimized.py "path/to/document.docx"
 ```
 
+### Web Interface Setup (NEW)
+```bash
+# Install all dependencies including web components
+pip install -r requirements.txt
+
+# Configure environment for web server
+cp .env.example .env
+# Add your GOOGLE_API_KEY and configure web settings
+
+# Start web server (development)
+python web/app.py
+
+# Or use the production runner
+python web/run.py
+
+# Access web interface at: http://localhost:5000
+```
+
 ### Production Commands
 ```bash
 # Complete Advanced System (recommended for development)

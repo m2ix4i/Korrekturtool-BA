@@ -1,0 +1,23 @@
+# Web-specific dependencies for Flask application
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.6
+Werkzeug==2.3.7
+
+# Background job processing
+Celery==5.3.4
+Redis==5.0.1
+
+# Database support
+SQLAlchemy==2.0.23
+Flask-SQLAlchemy==3.1.1
+
+# File handling and validation
+python-magic==0.4.27
+
+# WebSocket support
+python-socketio==5.10.0
+eventlet==0.33.3
+
+# Development and testing
+pytest-flask==1.3.0
