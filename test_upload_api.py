@@ -9,28 +9,50 @@ import tempfile
 import os
 from pathlib import Path
 
-def create_test_docx():
-    """Create a minimal valid DOCX file for testing"""
-    # This creates a basic ZIP structure that mimics a DOCX file
-    import zipfile
+class TestDocxBuilder:
+    """Test Data Builder pattern for DOCX file creation"""
     
-    temp_file = tempfile.NamedTemporaryFile(suffix='.docx', delete=False)
+    def build_valid_docx(self) -> str:
+        """Create a minimal valid DOCX file for testing"""
+        temp_file = tempfile.NamedTemporaryFile(suffix='.docx', delete=False)
+        self._create_docx_structure(temp_file.name)
+        return temp_file.name
     
-    with zipfile.ZipFile(temp_file.name, 'w') as zip_file:
-        # Required DOCX structure
-        zip_file.writestr('[Content_Types].xml', '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    def build_invalid_file(self) -> str:
+        """Create an invalid file for testing"""
+        temp_file = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
+        temp_file.write(b'This is not a DOCX file')
+        temp_file.close()
+        return temp_file.name
+    
+    def _create_docx_structure(self, file_path: str):
+        """Create basic ZIP structure that mimics a DOCX file"""
+        import zipfile
+        
+        with zipfile.ZipFile(file_path, 'w') as zip_file:
+            zip_file.writestr('[Content_Types].xml', self._get_content_types_xml())
+            zip_file.writestr('_rels/.rels', self._get_relationships_xml())
+            zip_file.writestr('word/document.xml', self._get_document_xml())
+    
+    def _get_content_types_xml(self) -> str:
+        """Get Content_Types.xml content"""
+        return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
     <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Default Extension="xml" ContentType="application/xml"/>
     <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-</Types>''')
-        
-        zip_file.writestr('_rels/.rels', '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+</Types>'''
+    
+    def _get_relationships_xml(self) -> str:
+        """Get _rels/.rels content"""
+        return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
     <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-</Relationships>''')
-        
-        zip_file.writestr('word/document.xml', '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+</Relationships>'''
+    
+    def _get_document_xml(self) -> str:
+        """Get word/document.xml content"""
+        return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
     <w:body>
         <w:p>
@@ -39,9 +61,7 @@ def create_test_docx():
             </w:r>
         </w:p>
     </w:body>
-</w:document>''')
-    
-    return temp_file.name
+</w:document>'''
 
 def test_upload_api():
     """Test the upload API endpoint"""
@@ -65,7 +85,8 @@ def test_upload_api():
     
     # Test 2: Upload valid DOCX file
     print("\n2. Testing valid DOCX upload...")
-    test_file = create_test_docx()
+    builder = TestDocxBuilder()
+    test_file = builder.build_valid_docx()
     
     try:
         with open(test_file, 'rb') as f:
