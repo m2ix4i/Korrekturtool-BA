@@ -24,6 +24,7 @@ from web.main.routes import main_bp
 from web.api.routes import api_bp
 from web.utils.errors import create_error_response
 from web.utils.directories import DirectoryManager
+from web.websocket import init_websocket
 
 # Load environment variables
 load_dotenv()
@@ -73,21 +74,26 @@ def create_app(config_class=WebConfig):
     # Register error handlers
     register_error_handlers(app)
     
-    return app
+    # Initialize WebSocket
+    socketio = init_websocket(app)
+    
+    return app, socketio
 
 # Create the application instance
-app = create_app()
+app, socketio = create_app()
 
 if __name__ == '__main__':
     # Development server
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
-    print(f"🚀 Starting German Thesis Correction Tool Web Server")
+    print(f"🚀 Starting German Thesis Correction Tool Web Server with WebSocket support")
     print(f"📍 Server will be available at: http://localhost:{port}")
     print(f"🔧 Debug mode: {'ON' if debug else 'OFF'}")
+    print(f"⚡ WebSocket support: ENABLED")
     
-    app.run(
+    socketio.run(
+        app,
         host='0.0.0.0',
         port=port,
         debug=debug,
