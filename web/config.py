@@ -12,7 +12,7 @@ class Config:
     """Base configuration class"""
     
     # Flask configuration
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or os.urandom(32).hex()
     
     # File upload configuration
     MAX_CONTENT_LENGTH = int(os.environ.get('MAX_FILE_SIZE', 50 * 1024 * 1024))  # 50MB default
@@ -24,7 +24,7 @@ class Config:
     ALLOWED_EXTENSIONS = {'docx'}
     
     # CORS configuration
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
+    CORS_ORIGINS = [origin.strip() for origin in os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')]
     
     # Processing configuration
     MAX_PROCESSING_TIME = int(os.environ.get('MAX_PROCESSING_TIME', 300))  # 5 minutes
@@ -41,7 +41,7 @@ class Config:
         """Initialize application with configuration"""
         # Create necessary directories
         for folder in [Config.UPLOAD_FOLDER, Config.TEMP_FOLDER, Config.OUTPUT_FOLDER]:
-            Path(folder).mkdir(exist_ok=True)
+            Path(folder).mkdir(parents=True, exist_ok=True)
 
 class DevelopmentConfig(Config):
     """Development configuration"""
@@ -54,8 +54,11 @@ class ProductionConfig(Config):
     TESTING = False
     
     # Use secure secret key in production
-    SECRET_KEY = os.environ.get('SECRET_KEY') or \
-        RuntimeError('SECRET_KEY environment variable must be set in production')
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    
+    def __init__(self):
+        if not self.SECRET_KEY:
+            raise RuntimeError('SECRET_KEY environment variable must be set in production')
 
 class TestingConfig(Config):
     """Testing configuration"""

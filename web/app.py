@@ -7,16 +7,20 @@ Provides web interface for the existing CLI-based correction system
 import os
 import sys
 from pathlib import Path
-from flask import Flask, render_template, jsonify, request, send_from_directory
+from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import logging
 
 # Add parent directory to path to import existing modules
-sys.path.append(str(Path(__file__).parent.parent))
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
-# Import configuration
+# Import configuration and blueprints
 from web.config import WebConfig
+from web.main.routes import main_bp
+from web.api.routes import api_bp
 
 # Load environment variables
 load_dotenv()
@@ -25,6 +29,9 @@ def create_app(config_class=WebConfig):
     """Application factory pattern"""
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    # Initialize configuration (create directories)
+    config_class.init_app(app)
     
     # Enable CORS for frontend integration
     CORS(app, origins=app.config.get('CORS_ORIGINS', ['http://localhost:3000']))
@@ -35,44 +42,9 @@ def create_app(config_class=WebConfig):
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Health check endpoint
-    @app.route('/health')
-    def health_check():
-        """Basic health check endpoint"""
-        return jsonify({
-            'status': 'healthy',
-            'service': 'German Thesis Correction Tool Web API',
-            'version': '1.0.0'
-        })
-    
-    # API routes will be registered here
-    @app.route('/api/v1/info')
-    def api_info():
-        """API information endpoint"""
-        return jsonify({
-            'name': 'German Thesis Correction Tool API',
-            'version': '1.0.0',
-            'description': 'Web API for automated German thesis correction with AI analysis',
-            'endpoints': {
-                'health': '/health',
-                'info': '/api/v1/info',
-                'upload': '/api/v1/upload (coming soon)',
-                'process': '/api/v1/process (coming soon)',
-                'status': '/api/v1/status/{job_id} (coming soon)',
-                'download': '/api/v1/download/{file_id} (coming soon)'
-            }
-        })
-    
-    # Serve static files
-    @app.route('/')
-    def index():
-        """Serve the main application page"""
-        return send_from_directory('static', 'index.html')
-    
-    @app.route('/static/<path:filename>')
-    def static_files(filename):
-        """Serve static files"""
-        return send_from_directory('static', filename)
+    # Register blueprints
+    app.register_blueprint(main_bp)
+    app.register_blueprint(api_bp)
     
     # Global error handlers
     @app.errorhandler(404)
