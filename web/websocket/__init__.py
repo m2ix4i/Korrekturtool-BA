@@ -34,7 +34,11 @@ def init_websocket(app):
             ping_interval=app.config.get('WEBSOCKET_PING_INTERVAL', 25)
         )
         
+        # Import event handlers to register them
+        from . import progress
+        
         logger.info(f"WebSocket initialized with CORS origins: {cors_origins}")
+        logger.info("WebSocket event handlers registered")
         return socketio
         
     except Exception as e:
