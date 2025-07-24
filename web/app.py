@@ -5,10 +5,18 @@ Provides web interface for the existing CLI-based correction system
 """
 
 import os
+import sys
+from pathlib import Path
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import logging
+
+# Add project root to path for imports (only when running directly)
+if __name__ == '__main__':
+    project_root = Path(__file__).parent.parent
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
 
 # Import configuration and blueprints
 from web.config import WebConfig
