@@ -5,6 +5,7 @@ API routes blueprint
 from flask import Blueprint, jsonify
 from web.utils.api_config import APIConfig
 from web.api.upload import upload_file, get_upload_info, cleanup_upload
+from web.api.processor import process_document, get_processing_status, download_result
 
 # Create API blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
@@ -34,3 +35,19 @@ def get_upload_configuration():
 def cleanup_uploaded_docx_file(file_id):
     """Clean up uploaded DOCX file by ID"""
     return cleanup_upload(file_id)
+
+# Document processing endpoints
+@api_bp.route('/process', methods=['POST'])
+def process_docx_document():
+    """Process uploaded DOCX document with AI analysis"""
+    return process_document()
+
+@api_bp.route('/status/<job_id>', methods=['GET'])
+def get_job_status(job_id):
+    """Get processing status for a specific job ID"""
+    return get_processing_status(job_id)
+
+@api_bp.route('/download/<file_id>', methods=['GET'])
+def download_processed_file(file_id):
+    """Download processed DOCX file"""
+    return download_result(file_id)
