@@ -2,8 +2,8 @@
 Main application routes blueprint
 """
 
-from pathlib import Path
 from flask import Blueprint, jsonify, send_from_directory
+from web.utils.paths import PathHelper
 
 # Create main blueprint
 main_bp = Blueprint('main', __name__)
@@ -20,11 +20,9 @@ def health_check():
 @main_bp.route('/')
 def index():
     """Serve the main application page"""
-    static_dir = Path(__file__).parent.parent / 'static'
-    return send_from_directory(static_dir, 'index.html')
+    return send_from_directory(PathHelper.get_static_directory(), 'index.html')
 
 @main_bp.route('/static/<path:filename>')
 def static_files(filename):
     """Serve static files"""
-    static_dir = Path(__file__).parent.parent / 'static'
-    return send_from_directory(static_dir, filename)
+    return send_from_directory(PathHelper.get_static_directory(), filename)

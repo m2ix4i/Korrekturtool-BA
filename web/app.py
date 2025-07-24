@@ -5,59 +5,65 @@ Provides web interface for the existing CLI-based correction system
 """
 
 import os
-import sys
-from pathlib import Path
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import logging
 
-# Add parent directory to path to import existing modules
-project_root = Path(__file__).parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
-
 # Import configuration and blueprints
 from web.config import WebConfig
 from web.main.routes import main_bp
 from web.api.routes import api_bp
+from web.utils.errors import create_error_response
+from web.utils.directories import DirectoryManager
 
 # Load environment variables
 load_dotenv()
+
+def configure_logging():
+    """Configure application logging"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+
+def register_error_handlers(app):
+    """Register global error handlers"""
+    @app.errorhandler(404)
+    def not_found(error):
+        return create_error_response('Not found', 'The requested resource was not found', 404)
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        return create_error_response('Internal server error', 'An internal error occurred', 500)
+    
+    @app.errorhandler(413)
+    def file_too_large(error):
+        return create_error_response('File too large', 'The uploaded file exceeds the size limit', 413)
 
 def create_app(config_class=WebConfig):
     """Application factory pattern"""
     app = Flask(__name__)
     app.config.from_object(config_class)
     
-    # Initialize configuration (create directories)
-    config_class.init_app(app)
+    # Create necessary directories
+    DirectoryManager.ensure_directories_exist(
+        config_class.get_required_directories()
+    )
+    
+    # Configure logging
+    configure_logging()
     
     # Enable CORS for frontend integration
     CORS(app, origins=app.config.get('CORS_ORIGINS', ['http://localhost:3000']))
-    
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
     
     # Register blueprints
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp)
     
-    # Global error handlers
-    @app.errorhandler(404)
-    def not_found(error):
-        return jsonify({'error': 'Not found', 'message': 'The requested resource was not found'}), 404
-    
-    @app.errorhandler(500)
-    def internal_error(error):
-        return jsonify({'error': 'Internal server error', 'message': 'An internal error occurred'}), 500
-    
-    @app.errorhandler(413)
-    def file_too_large(error):
-        return jsonify({'error': 'File too large', 'message': 'The uploaded file exceeds the size limit'}), 413
+    # Register error handlers
+    register_error_handlers(app)
     
     return app
 

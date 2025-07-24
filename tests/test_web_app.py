@@ -5,11 +5,12 @@ Unit tests for the Flask web application
 
 import pytest
 import json
+import os
 from pathlib import Path
 import sys
 
-# Add the web directory to the path
-sys.path.append(str(Path(__file__).parent.parent / "web"))
+# Add the web directory to the path  
+sys.path.append(str(Path(__file__).parent.parent))
 
 from web.app import create_app
 from web.config import TestingConfig
@@ -99,3 +100,19 @@ class TestWebApplication:
         # Testing config should override defaults
         assert app.config['TESTING'] is True
         assert 'SECRET_KEY' in app.config
+        
+    def test_file_upload_configuration(self, app):
+        """Test file upload configuration"""
+        assert app.config['MAX_CONTENT_LENGTH'] == 1024 * 1024  # 1MB for testing
+        assert app.config['ALLOWED_EXTENSIONS'] == {'docx'}
+        assert 'UPLOAD_FOLDER' in app.config
+        
+    def test_cors_configuration(self, app):
+        """Test CORS configuration"""
+        assert 'CORS_ORIGINS' in app.config
+        assert isinstance(app.config['CORS_ORIGINS'], list)
+        
+    def test_google_api_configuration(self, app):
+        """Test Google API configuration is available"""
+        # Should have GOOGLE_API_KEY key (even if None in testing)
+        assert 'GOOGLE_API_KEY' in app.config
