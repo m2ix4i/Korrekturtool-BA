@@ -88,3 +88,12 @@ class APIErrorBuilder:
         response_data = {'success': True}
         response_data.update(data)
         return jsonify(response_data), 200
+    
+    @staticmethod
+    def not_found_error(message: str = "Resource not found") -> Tuple:
+        """Create not found error response"""
+        return jsonify({
+            'success': False,
+            'error': 'not_found',
+            'message': message
+        }), 404

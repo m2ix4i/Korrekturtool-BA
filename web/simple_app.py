@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Flask Web Application for German Bachelor Thesis Correction Tool
+Simple Flask Web Application for German Bachelor Thesis Correction Tool
 Provides web interface for the existing CLI-based correction system
 """
 
@@ -24,8 +24,6 @@ from web.main.routes import main_bp
 from web.api.routes import api_bp
 from web.utils.errors import create_error_response
 from web.utils.directories import DirectoryManager
-from web.websocket import init_websocket
-from web.api.processor import init_processor
 
 # Load environment variables
 load_dotenv()
@@ -36,7 +34,6 @@ def configure_logging():
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-
 
 def register_error_handlers(app):
     """Register global error handlers"""
@@ -75,29 +72,21 @@ def create_app(config_class=WebConfig):
     # Register error handlers
     register_error_handlers(app)
     
-    # Initialize WebSocket
-    socketio = init_websocket(app)
-    
-    # Initialize background processor
-    init_processor(app)
-    
-    return app, socketio
+    return app
 
 # Create the application instance
-app, socketio = create_app()
+app = create_app()
 
 if __name__ == '__main__':
     # Development server
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
-    print(f"🚀 Starting German Thesis Correction Tool Web Server with WebSocket support")
+    print(f"🚀 Starting German Thesis Correction Tool Web Server")
     print(f"📍 Server will be available at: http://localhost:{port}")
     print(f"🔧 Debug mode: {'ON' if debug else 'OFF'}")
-    print(f"⚡ WebSocket support: ENABLED")
     
-    socketio.run(
-        app,
+    app.run(
         host='0.0.0.0',
         port=port,
         debug=debug,
