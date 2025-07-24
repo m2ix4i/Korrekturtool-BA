@@ -36,12 +36,16 @@ class Config:
     # Database configuration (for job management)
     DATABASE_URL = os.environ.get('DATABASE_URL') or 'sqlite:///jobs.db'
     
+    @classmethod
+    def get_required_directories(cls):
+        """Return list of directories that need to exist"""
+        return [cls.UPLOAD_FOLDER, cls.TEMP_FOLDER, cls.OUTPUT_FOLDER]
+    
     @staticmethod
     def init_app(app):
         """Initialize application with configuration"""
-        # Create necessary directories
-        for folder in [Config.UPLOAD_FOLDER, Config.TEMP_FOLDER, Config.OUTPUT_FOLDER]:
-            Path(folder).mkdir(parents=True, exist_ok=True)
+        # Configuration initialization - directories are now handled in app factory
+        pass
 
 class DevelopmentConfig(Config):
     """Development configuration"""
