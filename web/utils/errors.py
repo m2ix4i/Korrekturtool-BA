@@ -5,6 +5,16 @@ Error handling utilities
 from flask import jsonify
 
 
+class ValidationError(Exception):
+    """Exception raised for file validation errors"""
+    pass
+
+
+class FileProcessingError(Exception):
+    """Exception raised for file processing errors"""
+    pass
+
+
 def create_error_response(error_type: str, message: str, status_code: int):
     """
     Create standardized error response
