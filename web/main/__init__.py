@@ -1,0 +1,3 @@
+"""
+Main routes blueprint package
+"""

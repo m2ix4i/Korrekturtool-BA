@@ -1,0 +1,22 @@
+{
+  "context7": {
+    "transport": "http",
+    "url": "https://mcp.context7.com/mcp"
+  },
+  "sequential-thinking": {
+    "transport": "stdio",
+    "command": "npx -y @modelcontextprotocol/server-sequential-thinking@latest"
+  },
+  "magic": {
+    "transport": "stdio",
+    "command": "npx -y @magicuidesign/mcp@latest"
+  },
+  "puppeteer": {
+    "transport": "stdio",
+    "command": "npx -y @modelcontextprotocol/server-puppeteer@latest"
+  },
+  "playwright": {
+    "transport": "stdio",
+    "command": "npx -y @playwright/mcp@latest"
+  }
+}
