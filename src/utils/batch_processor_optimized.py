@@ -15,9 +15,9 @@ import logging
 
 # Import der Advanced-Module
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from analyzers.advanced_gemini_analyzer import AdvancedGeminiAnalyzer
-from utils.advanced_chunking import AdvancedChunker, TextChunk
-from utils.smart_comment_formatter import SmartCommentFormatter
+from src.analyzers.advanced_gemini_analyzer import AdvancedGeminiAnalyzer
+from src.utils.advanced_chunking import AdvancedChunker, TextChunk
+from src.utils.smart_comment_formatter import SmartCommentFormatter
 
 
 @dataclass

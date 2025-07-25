@@ -35,6 +35,7 @@ class BackgroundProcessor:
         
         self.job_manager = JobManager()
         self.processor_integration = EnhancedProcessorIntegration()
+        self.flask_app = None
         
         # Job queue and worker thread
         self.job_queue = Queue()
@@ -47,6 +48,10 @@ class BackgroundProcessor:
         
         self._initialized = True
         logger.info("BackgroundProcessor initialized")
+    
+    def set_flask_app(self, app):
+        """Set the Flask app instance for context management"""
+        self.flask_app = app
     
     def start(self):
         """Start the background processor"""
@@ -135,30 +140,36 @@ class BackgroundProcessor:
     def _process_job(self, job_id: str):
         """Process a single job"""
         try:
-            # Get job from manager
-            job = self.job_manager.get_job(job_id)
-            if not job:
-                logger.error(f"Job {job_id} not found")
+            # Ensure we have Flask app context
+            if not self.flask_app:
+                logger.error(f"Flask app not set for job {job_id}")
                 return
             
-            logger.info(f"Processing job {job_id}")
-            
-            # Start job
-            self.job_manager.start_job(job_id)
-            
-            # Process document with enhanced progress tracking
-            result = self.processor_integration.process_document(
-                input_file_path=job.file_path,
-                processing_mode=job.processing_mode,
-                categories=job.options.categories,
-                job_id=job_id,
-                output_filename=job.options.output_filename
-            )
-            
-            # Complete job
-            self.job_manager.complete_job(job_id, result)
-            
-            logger.info(f"Successfully completed job {job_id}")
+            with self.flask_app.app_context():
+                # Get job from manager
+                job = self.job_manager.get_job(job_id)
+                if not job:
+                    logger.error(f"Job {job_id} not found")
+                    return
+                
+                logger.info(f"Processing job {job_id}")
+                
+                # Start job
+                self.job_manager.start_job(job_id)
+                
+                # Process document with enhanced progress tracking
+                result = self.processor_integration.process_document(
+                    input_file_path=job.file_path,
+                    processing_mode=job.processing_mode,
+                    categories=job.options.categories,
+                    job_id=job_id,
+                    output_filename=job.options.output_filename
+                )
+                
+                # Complete job
+                self.job_manager.complete_job(job_id, result)
+                
+                logger.info(f"Successfully completed job {job_id}")
             
         except Exception as e:
             error_message = f"Processing failed: {str(e)}"

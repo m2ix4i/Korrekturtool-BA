@@ -72,6 +72,10 @@ def create_app(config_class=WebConfig):
     # Register error handlers
     register_error_handlers(app)
     
+    # Initialize the background processor
+    from web.api.processor import init_processor
+    init_processor(app)
+    
     return app
 
 # Create the application instance

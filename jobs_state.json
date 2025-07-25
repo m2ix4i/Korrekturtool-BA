@@ -1,0 +1,73 @@
+{
+  "c4361cf7-dbb7-4e00-813c-65f3bf3d1b1f": {
+    "job_id": "c4361cf7-dbb7-4e00-813c-65f3bf3d1b1f",
+    "file_id": "795523a3-d1cf-4375-a4f0-4d61a8095bec",
+    "processing_mode": "complete",
+    "options": {
+      "categories": [
+        "grammar",
+        "style",
+        "clarity"
+      ],
+      "output_filename": "test_corrected.docx"
+    },
+    "status": "failed",
+    "progress": {
+      "current_step": "Failed",
+      "progress_percent": 0,
+      "estimated_remaining_seconds": null
+    },
+    "estimated_time_seconds": 135,
+    "created_at": "2025-07-25T18:30:25.468272",
+    "started_at": "2025-07-25T18:30:48.909509",
+    "completed_at": "2025-07-25T18:30:48.910639",
+    "elapsed_time_seconds": 0.00113,
+    "error_message": "Processing failed: Working outside of application context.\n\nThis typically means that you attempted to use functionality that needed\nthe current application. To solve this, set up an application context\nwith app.app_context(). See the documentation for more information."
+  },
+  "50e224a1-dae6-4db9-8bce-d2cdadb4df80": {
+    "job_id": "50e224a1-dae6-4db9-8bce-d2cdadb4df80",
+    "file_id": "d44d0e92-d291-4662-874e-b7437ca58a3b",
+    "processing_mode": "complete",
+    "options": {
+      "categories": [
+        "grammar",
+        "style",
+        "clarity"
+      ],
+      "output_filename": "test_corrected.docx"
+    },
+    "status": "completed",
+    "progress": {
+      "current_step": "Completed",
+      "progress_percent": 100,
+      "estimated_remaining_seconds": null
+    },
+    "estimated_time_seconds": 135,
+    "created_at": "2025-07-25T18:33:53.076160",
+    "started_at": "2025-07-25T18:33:53.077322",
+    "completed_at": "2025-07-25T18:33:53.405024",
+    "elapsed_time_seconds": 0.327702,
+    "error_message": null,
+    "result": {
+      "output_file_path": "outputs/test_corrected.docx",
+      "output_file_id": "test_corrected",
+      "total_suggestions": 0,
+      "successful_integrations": 0,
+      "processing_time_seconds": 0,
+      "cost_estimate": 0.0,
+      "performance_stats": {
+        "start_time": 0,
+        "end_time": 0,
+        "parsing_time": 0,
+        "chunking_time": 0,
+        "analysis_time": 0,
+        "formatting_time": 0,
+        "integration_time": 0,
+        "total_suggestions": 0,
+        "successful_integrations": 0,
+        "chunks_processed": 0,
+        "api_calls_made": 0
+      }
+    }
+  }
+}
