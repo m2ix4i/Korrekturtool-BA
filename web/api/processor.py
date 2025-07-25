@@ -1,270 +1,228 @@
 """
-Simple document processing API endpoint
-Integrates directly with existing main_complete_advanced and main_performance_optimized
+Document processing API endpoints
+Handles processing requests and job management
 """
 
 import os
-import sys
-import json
-import uuid
 import logging
-import threading
-from datetime import datetime
 from pathlib import Path
 from flask import request, current_app, send_file
 
-# Add project root to path for imports
-project_root = Path(__file__).parent.parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
-
-from web.utils.errors import ValidationError, ProcessingError
+from web.services.job_manager import JobManager
+from web.services.background_processor import BackgroundProcessor
+from web.services.processor_integration import ProcessorIntegration
+from web.models.job import ProcessingMode, ProcessingOptions
 from web.utils.error_builder import APIErrorBuilder
+from web.utils.errors import ValidationError, ProcessingError
 
-# Configure logging
 logger = logging.getLogger(__name__)
 
-# Store processing jobs in memory (in production, use Redis or database)
-processing_jobs = {}
+# Initialize services
+job_manager = JobManager()
+background_processor = BackgroundProcessor()
 
 def process_document():
-    """Handle document processing POST request"""
+    """
+    Handle document processing request
+    
+    POST /api/v1/process
+    {
+        "file_id": "uuid-string",
+        "processing_mode": "complete|performance",
+        "options": {
+            "categories": ["grammar", "style", "clarity", "academic"],
+            "output_filename": "custom_name.docx"
+        }
+    }
+    """
     try:
-        request_data = _extract_processing_request()
-        job_id = str(uuid.uuid4())
+        # Validate request
+        if not request.is_json:
+            return APIErrorBuilder.validation_error("Request must be JSON")
         
-        # Start processing in background thread
-        thread = threading.Thread(
-            target=_process_document_async,
-            args=(job_id, request_data)
+        data = request.get_json()
+        
+        # Extract and validate required fields
+        file_id = data.get('file_id')
+        processing_mode = data.get('processing_mode', 'complete')
+        options = data.get('options', {})
+        
+        if not file_id:
+            return APIErrorBuilder.validation_error("file_id is required")
+        
+        # Validate processing mode
+        if processing_mode not in ['complete', 'performance']:
+            return APIErrorBuilder.validation_error(
+                "processing_mode must be 'complete' or 'performance'"
+            )
+        
+        # Validate file exists in upload directory
+        file_path = _get_uploaded_file_path(file_id)
+        if not file_path or not os.path.exists(file_path):
+            return APIErrorBuilder.validation_error(
+                f"File {file_id} not found. Please upload the file first."
+            )
+        
+        # Create processing options
+        try:
+            processing_options = ProcessingOptions.from_dict(options)
+            
+            # Validate categories
+            valid_categories = {'grammar', 'style', 'clarity', 'academic'}
+            if not all(cat in valid_categories for cat in processing_options.categories):
+                return APIErrorBuilder.validation_error(
+                    f"Invalid categories. Valid options: {', '.join(valid_categories)}"
+                )
+            
+            if not processing_options.categories:
+                processing_options.categories = ['grammar', 'style', 'clarity', 'academic']
+                
+        except Exception as e:
+            return APIErrorBuilder.validation_error(f"Invalid options: {str(e)}")
+        
+        # Create job
+        job = job_manager.create_job(
+            file_id=file_id,
+            file_path=file_path,
+            processing_mode=processing_mode,
+            options=processing_options.to_dict()
         )
-        thread.start()
         
-        # Store job info
-        processing_jobs[job_id] = {
-            'status': 'processing',
-            'created_at': datetime.now().isoformat(),
-            'file_id': request_data.get('file_id'),
-            'processing_mode': request_data.get('processing_mode', 'complete'),
-            'progress': 0,
-            'message': 'Processing started'
+        # Submit job to background processor
+        if not background_processor.submit_job(job.job_id):
+            return APIErrorBuilder.processing_error(
+                "Failed to submit job for processing. Please try again."
+            )
+        
+        # Return job information
+        response_data = {
+            'job_id': job.job_id,
+            'status': job.status.value,
+            'estimated_time_seconds': job.estimated_time_seconds,
+            'message': 'Job submitted for processing'
         }
         
-        return APIErrorBuilder.success_response({
-            'job_id': job_id,
-            'status': 'processing',
-            'message': 'Document processing started',
-            'estimated_time': '30-90 seconds'
-        })
+        logger.info(f"Created processing job {job.job_id} for file {file_id}")
+        return APIErrorBuilder.success_response(response_data)
         
     except ValidationError as e:
-        logger.error(f"Validation error: {str(e)}")
+        logger.error(f"Validation error in process_document: {str(e)}")
         return APIErrorBuilder.validation_error(str(e))
+    
+    except ProcessingError as e:
+        logger.error(f"Processing error in process_document: {str(e)}")
+        return APIErrorBuilder.processing_error(str(e))
+    
     except Exception as e:
-        logger.error(f"Unexpected error during processing request: {str(e)}")
-        return APIErrorBuilder.internal_error("Failed to start document processing")
+        logger.error(f"Unexpected error in process_document: {str(e)}")
+        return APIErrorBuilder.internal_error("An error occurred while creating the processing job")
 
-def _extract_processing_request():
-    """Extract and validate processing request data"""
-    if not request.is_json:
-        raise ValidationError('Request must be JSON')
+def get_processing_status(job_id: str):
+    """
+    Get processing status for a job
     
-    data = request.get_json()
-    
-    if not data.get('file_id'):
-        raise ValidationError('file_id is required')
-    
-    # Validate processing mode
-    valid_modes = ['complete', 'optimized']
-    processing_mode = data.get('processing_mode', 'complete')
-    if processing_mode not in valid_modes:
-        raise ValidationError(f'processing_mode must be one of: {valid_modes}')
-    
-    # Validate analysis categories
-    valid_categories = ['grammar', 'style', 'clarity', 'academic']
-    categories = data.get('categories', valid_categories)
-    if not isinstance(categories, list):
-        raise ValidationError('categories must be a list')
-    
-    invalid_categories = [cat for cat in categories if cat not in valid_categories]
-    if invalid_categories:
-        raise ValidationError(f'Invalid categories: {invalid_categories}')
-    
-    return {
-        'file_id': data['file_id'],
-        'processing_mode': processing_mode,
-        'categories': categories,
-        'output_filename': data.get('output_filename')
-    }
-
-def _process_document_async(job_id, request_data):
-    """Process document asynchronously"""
+    GET /api/v1/status/{job_id}
+    """
     try:
-        # Update job status
-        processing_jobs[job_id].update({
-            'status': 'processing',
-            'progress': 10,
-            'message': 'Initializing processing pipeline'
-        })
+        # Get job from manager
+        job = job_manager.get_job(job_id)
+        if not job:
+            return APIErrorBuilder.not_found_error(f"Job {job_id} not found")
         
-        # Get file paths
-        upload_dir = Path(current_app.config.get('UPLOAD_FOLDER', 'uploads'))
-        output_dir = Path(current_app.config.get('OUTPUT_FOLDER', 'outputs'))
-        output_dir.mkdir(exist_ok=True)
+        # Prepare response data
+        response_data = {
+            'job_id': job.job_id,
+            'status': job.status.value,
+            'progress': job.progress.to_dict(),
+            'estimated_time_seconds': job.estimated_time_seconds,
+            'elapsed_time_seconds': job.get_elapsed_time(),
+            'created_at': job.created_at.isoformat(),
+            'started_at': job.started_at.isoformat() if job.started_at else None,
+            'completed_at': job.completed_at.isoformat() if job.completed_at else None
+        }
         
-        input_file = upload_dir / f"{request_data['file_id']}.docx"
-        if not input_file.exists():
-            raise ProcessingError(f"Input file not found: {input_file}")
+        # Add error message if failed
+        if job.error_message:
+            response_data['error_message'] = job.error_message
         
-        # Generate output filename
-        output_filename = request_data.get('output_filename') or f"{request_data['file_id']}_corrected.docx"
-        if not output_filename.endswith('.docx'):
-            output_filename += '.docx'
-        output_file = output_dir / output_filename
+        # Add result if completed
+        if job.result:
+            response_data['result'] = {
+                'output_file_id': job.result.output_file_id,
+                'total_suggestions': job.result.total_suggestions,
+                'successful_integrations': job.result.successful_integrations,
+                'processing_time_seconds': job.result.processing_time_seconds,
+                'cost_estimate': job.result.cost_estimate,
+                'download_url': f"/api/v1/download/{job.result.output_file_id}" if job.result.output_file_id else None
+            }
         
-        # Update progress
-        processing_jobs[job_id].update({
-            'progress': 20,
-            'message': 'Loading processing modules'
-        })
-        
-        # Import processing modules (lazy import to avoid startup delays)
-        if request_data['processing_mode'] == 'optimized':
-            from main_performance_optimized import main as process_main
-        else:
-            from main_complete_advanced import main as process_main
-        
-        # Update progress
-        processing_jobs[job_id].update({
-            'progress': 30,
-            'message': 'Starting AI analysis'
-        })
-        
-        # Process the document
-        success = _run_document_processing(
-            process_main, 
-            str(input_file), 
-            str(output_file),
-            request_data['categories']
-        )
-        
-        if success and output_file.exists():
-            # Processing completed successfully
-            processing_jobs[job_id].update({
-                'status': 'completed',
-                'progress': 100,
-                'message': 'Document processing completed successfully',
-                'output_file': str(output_file),
-                'completed_at': datetime.now().isoformat()
-            })
-            logger.info(f"Document processing completed successfully for job {job_id}")
-        else:
-            # Processing failed
-            processing_jobs[job_id].update({
-                'status': 'failed',
-                'progress': 0,
-                'message': 'Document processing failed',
-                'error': 'Processing did not complete successfully',
-                'failed_at': datetime.now().isoformat()
-            })
-            logger.error(f"Document processing failed for job {job_id}")
-            
-    except Exception as e:
-        # Processing error
-        processing_jobs[job_id].update({
-            'status': 'failed',
-            'progress': 0,
-            'message': f'Processing error: {str(e)}',
-            'error': str(e),
-            'failed_at': datetime.now().isoformat()
-        })
-        logger.error(f"Processing error for job {job_id}: {str(e)}")
-
-def _run_document_processing(process_func, input_file, output_file, categories):
-    """Run the document processing function safely"""
-    try:
-        # Create a minimal arguments object that matches what the main functions expect
-        class Args:
-            def __init__(self, input_file, output_file, categories):
-                self.input_file = input_file
-                self.output_file = output_file
-                self.categories = categories
-                self.verbose = False
-        
-        args = Args(input_file, output_file, categories)
-        
-        # Call the processing function
-        result = process_func(args)
-        return result is not False  # Consider success if not explicitly False
+        return APIErrorBuilder.success_response(response_data)
         
     except Exception as e:
-        logger.error(f"Error in document processing: {str(e)}")
-        return False
-
-def get_processing_status(job_id):
-    """Get processing status for a job ID"""
-    try:
-        if job_id not in processing_jobs:
-            return APIErrorBuilder.not_found_error("Job not found")
-        
-        job_data = processing_jobs[job_id].copy()
-        
-        # Clean up sensitive data
-        if 'output_file' in job_data and job_data['status'] == 'completed':
-            job_data['download_available'] = True
-        
-        return APIErrorBuilder.success_response(job_data)
-        
-    except Exception as e:
-        logger.error(f"Error getting job status: {str(e)}")
+        logger.error(f"Error getting job status {job_id}: {str(e)}")
         return APIErrorBuilder.internal_error("Failed to retrieve job status")
 
-def download_result(file_id):
-    """Download processed result file"""
+def download_result(file_id: str):
+    """
+    Download processed file
+    
+    GET /api/v1/download/{file_id}
+    """
     try:
-        # Find job with this file_id
-        job = None
-        for job_data in processing_jobs.values():
-            if (job_data.get('file_id') == file_id and 
-                job_data.get('status') == 'completed' and 
-                'output_file' in job_data):
-                job = job_data
-                break
+        # Find output file
+        output_dir = Path(current_app.config.get('OUTPUT_FOLDER', 'outputs'))
+        file_path = output_dir / f"{file_id}.docx"
         
-        if not job:
-            return APIErrorBuilder.not_found_error("Processed file not found or not ready")
+        if not file_path.exists():
+            return APIErrorBuilder.not_found_error(
+                "File not found. It may have been processed too long ago and cleaned up."
+            )
         
-        output_file = Path(job['output_file'])
-        if not output_file.exists():
-            return APIErrorBuilder.not_found_error("Output file not found on disk")
-        
+        # Send file
         return send_file(
-            str(output_file),
+            str(file_path),
             as_attachment=True,
-            download_name=output_file.name,
+            download_name=f"corrected_{file_id}.docx",
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
         
     except Exception as e:
-        logger.error(f"Error downloading file: {str(e)}")
+        logger.error(f"Error downloading file {file_id}: {str(e)}")
         return APIErrorBuilder.internal_error("Failed to download file")
 
-def cleanup_processing_jobs():
-    """Clean up old processing jobs (call periodically)"""
+
+def get_processor_status():
+    """
+    Get background processor status (for debugging/monitoring)
+    
+    GET /api/v1/processor/status
+    """
     try:
-        cutoff_time = datetime.now().timestamp() - (24 * 60 * 60)  # 24 hours ago
+        status = background_processor.get_status()
+        return APIErrorBuilder.success_response(status)
         
-        jobs_to_remove = []
-        for job_id, job_data in processing_jobs.items():
-            created_at = datetime.fromisoformat(job_data['created_at']).timestamp()
-            if created_at < cutoff_time:
-                jobs_to_remove.append(job_id)
-        
-        for job_id in jobs_to_remove:
-            del processing_jobs[job_id]
-            
-        if jobs_to_remove:
-            logger.info(f"Cleaned up {len(jobs_to_remove)} old processing jobs")
-            
     except Exception as e:
-        logger.error(f"Error cleaning up processing jobs: {str(e)}")
+        logger.error(f"Error getting processor status: {str(e)}")
+        return APIErrorBuilder.internal_error("Failed to get processor status")
+
+
+def _get_uploaded_file_path(file_id: str) -> str:
+    """Get file path for uploaded file ID"""
+    upload_dir = Path(current_app.config.get('UPLOAD_FOLDER', 'uploads'))
+    file_path = upload_dir / f"{file_id}.docx"
+    return str(file_path)
+
+
+def _estimate_processing_time(processing_mode: str, categories: list) -> int:
+    """Estimate processing time in seconds"""
+    integration = ProcessorIntegration()
+    mode = ProcessingMode(processing_mode)
+    return integration.estimate_processing_time(mode, categories)
+
+# Initialization function for the Flask app
+def init_processor(app):
+    """Initialize the background processor with the Flask app"""
+    with app.app_context():
+        # Start the background processor
+        background_processor.start()
+        logger.info("Background processor started for Flask app")

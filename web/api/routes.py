@@ -2,7 +2,7 @@
 API routes blueprint
 """
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request, send_file
 from web.utils.api_config import APIConfig
 from web.api.upload import upload_file, get_upload_info, cleanup_upload
 from web.api.processor import process_document, get_processing_status, download_result
