@@ -8,6 +8,9 @@ from web.utils.paths import PathHelper
 # Create main blueprint
 main_bp = Blueprint('main', __name__)
 
+# Import test routes
+from web.main.test_routes import test_bp
+
 @main_bp.route('/health')
 def health_check():
     """Basic health check endpoint"""
