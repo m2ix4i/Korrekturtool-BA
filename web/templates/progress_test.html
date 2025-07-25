@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Tracking Test - German Thesis Correction Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .progress-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background-color: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .stage-progress {
+            width: 100%;
+            height: 15px;
+            background-color: #f0f0f0;
+            border-radius: 7px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .stage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2196F3, #1976D2);
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.processing {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .status.completed {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .log {
+            background: #2d2d2d;
+            color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        
+        .log-entry.info { color: #87CEEB; }
+        .log-entry.success { color: #90EE90; }
+        .log-entry.warning { color: #FFD700; }
+        .log-entry.error { color: #FF6B6B; }
+        
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Progress Tracking Test Interface</h1>
+        
+        <div class="status" id="connectionStatus">
+            Connecting to WebSocket...
+        </div>
+        
+        <div class="controls">
+            <button id="startTestBtn" onclick="startProgressTest()">Start Test Job</button>
+            <button id="clearLogBtn" onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <div class="progress-container">
+            <h3>Overall Progress</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="overallProgress">0%</div>
+            </div>
+            
+            <h4>Current Stage: <span id="currentStage">Not started</span></h4>
+            <div class="stage-progress">
+                <div class="stage-fill" id="stageProgress"></div>
+            </div>
+            
+            <p id="progressMessage">Ready to start processing...</p>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value" id="elapsedTime">0s</div>
+                <div class="metric-label">Elapsed Time</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="estimatedRemaining">--</div>
+                <div class="metric-label">Est. Remaining</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="processingRate">--</div>
+                <div class="metric-label">Processing Rate</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="currentItem">--</div>
+                <div class="metric-label">Current Item</div>
+            </div>
+        </div>
+        
+        <div class="log" id="eventLog">
+            <div class="log-entry info">WebSocket connection initializing...</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        // WebSocket connection
+        let socket = null;
+        let currentJobId = null;
+        let startTime = null;
+        let updateInterval = null;
+        
+        // Initialize WebSocket connection
+        function initializeWebSocket() {
+            socket = io();
+            
+            // Connection events
+            socket.on('connect', function() {
+                updateStatus('connected', '✅ Connected to progress tracking service');
+                addLogEntry('success', 'WebSocket connected successfully');
+            });
+            
+            socket.on('disconnect', function() {
+                updateStatus('error', '❌ Disconnected from server');
+                addLogEntry('error', 'WebSocket disconnected');
+                clearInterval(updateInterval);
+            });
+            
+            socket.on('connected', function(data) {
+                addLogEntry('info', `Connected with client ID: ${data.client_id}`);
+            });
+            
+            // Progress tracking events
+            socket.on('job_started', function(data) {
+                addLogEntry('success', `Job started: ${data.job_id}`);
+                startTime = new Date();
+                startElapsedTimer();
+            });
+            
+            socket.on('progress_update', function(data) {
+                updateProgress(data);
+                addLogEntry('info', `${data.stage}: ${data.progress}% - ${data.message}`);
+            });
+            
+            socket.on('stage_completed', function(data) {
+                addLogEntry('success', `✅ Stage completed: ${data.completed_stage}`);
+                if (data.next_stage) {
+                    addLogEntry('info', `➡️ Next stage: ${data.next_stage}`);
+                }
+            });
+            
+            socket.on('job_completed', function(data) {
+                updateStatus('completed', `✅ Job completed successfully in ${data.processing_time}`);
+                addLogEntry('success', `🎉 Job completed: ${data.job_id}`);
+                if (data.download_url) {
+                    addLogEntry('info', `📥 Download available at: ${data.download_url}`);
+                }
+                clearInterval(updateInterval);
+                document.getElementById('startTestBtn').disabled = false;
+            });
+            
+            socket.on('job_failed', function(data) {
+                updateStatus('error', `❌ Job failed: ${data.error}`);
+                addLogEntry('error', `Job failed: ${data.error}`);
+                clearInterval(updateInterval);
+                document.getElementById('startTestBtn').disabled = false;
+            });
+            
+            // Error handling
+            socket.on('error', function(data) {
+                addLogEntry('error', `Error: ${data.message}`);
+            });
+        }
+        
+        // Start a test progress tracking job
+        function startProgressTest() {
+            if (!socket || !socket.connected) {
+                addLogEntry('error', 'WebSocket not connected');
+                return;
+            }
+            
+            // Generate test job ID
+            currentJobId = 'test-job-' + Date.now();
+            
+            // Join job room
+            socket.emit('join_job', { job_id: currentJobId });
+            
+            // Simulate job start
+            simulateJobProgress();
+            
+            updateStatus('processing', '🔄 Test job started');
+            document.getElementById('startTestBtn').disabled = true;
+        }
+        
+        // Simulate job progress for testing
+        function simulateJobProgress() {
+            const stages = [
+                { name: 'initializing', duration: 2000, message: 'Initializing processing system...' },
+                { name: 'parsing', duration: 3000, message: 'Parsing document content...' },
+                { name: 'chunking', duration: 2000, message: 'Creating intelligent chunks...' },
+                { name: 'analyzing', duration: 10000, message: 'Analyzing with AI (this takes the longest)...' },
+                { name: 'formatting', duration: 1500, message: 'Formatting comments...' },
+                { name: 'integrating', duration: 3000, message: 'Integrating with Word document...' },
+                { name: 'finalizing', duration: 1000, message: 'Finalizing and saving...' }
+            ];
+            
+            let currentStageIndex = 0;
+            let stageStartTime = Date.now();
+            
+            // Emit job started
+            socket.emit('job_started', {
+                job_id: currentJobId,
+                stages: stages.map(s => s.name),
+                estimated_duration: stages.reduce((sum, s) => sum + s.duration, 0) / 1000
+            });
+            
+            function progressStage() {
+                if (currentStageIndex >= stages.length) {
+                    // Complete job
+                    socket.emit('job_completed', {
+                        job_id: currentJobId,
+                        success: true,
+                        processing_time: ((Date.now() - stageStartTime) / 1000).toFixed(1) + ' seconds',
+                        result: {
+                            total_suggestions: 42,
+                            successful_integrations: 38,
+                            download_url: '/api/v1/download/test-output'
+                        }
+                    });
+                    return;
+                }
+                
+                const stage = stages[currentStageIndex];
+                const stageProgressInterval = stage.duration / 20; // 20 updates per stage
+                let stageProgress = 0;
+                
+                const progressTimer = setInterval(() => {
+                    stageProgress += 5; // 5% per update
+                    
+                    const overallProgress = Math.floor(
+                        (currentStageIndex / stages.length + stageProgress / 100 / stages.length) * 100
+                    );
+                    
+                    // Emit progress update
+                    socket.emit('progress_update', {
+                        job_id: currentJobId,
+                        stage: stage.name,
+                        progress: overallProgress,
+                        stage_progress: stageProgress,
+                        message: stage.message,
+                        estimated_remaining: Math.max(0, Math.floor((stages.length - currentStageIndex - 1) * 2)),
+                        current_item: `item ${Math.floor(stageProgress / 5)}/20`,
+                        processing_rate: (Math.random() * 5 + 2).toFixed(1)
+                    });
+                    
+                    if (stageProgress >= 100) {
+                        clearInterval(progressTimer);
+                        
+                        // Emit stage completed
+                        socket.emit('stage_completed', {
+                            job_id: currentJobId,
+                            completed_stage: stage.name,
+                            next_stage: currentStageIndex < stages.length - 1 ? stages[currentStageIndex + 1].name : null
+                        });
+                        
+                        currentStageIndex++;
+                        setTimeout(progressStage, 500); // Brief pause between stages
+                    }
+                }, stageProgressInterval);
+            }
+            
+            // Start first stage after brief delay
+            setTimeout(progressStage, 1000);
+        }
+        
+        // Update progress display
+        function updateProgress(data) {
+            // Update overall progress
+            const overallBar = document.getElementById('overallProgress');
+            overallBar.style.width = data.progress + '%';
+            overallBar.textContent = data.progress + '%';
+            
+            // Update stage progress
+            const stageBar = document.getElementById('stageProgress');
+            stageBar.style.width = (data.stage_progress || 0) + '%';
+            
+            // Update stage name and message
+            document.getElementById('currentStage').textContent = data.stage || 'Unknown';
+            document.getElementById('progressMessage').textContent = data.message || 'Processing...';
+            
+            // Update metrics
+            if (data.estimated_remaining !== undefined) {
+                document.getElementById('estimatedRemaining').textContent = data.estimated_remaining + 's';
+            }
+            if (data.processing_rate) {
+                document.getElementById('processingRate').textContent = data.processing_rate + '/s';
+            }
+            if (data.current_item) {
+                document.getElementById('currentItem').textContent = data.current_item;
+            }
+        }
+        
+        // Update connection status
+        function updateStatus(type, message) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.className = 'status ' + type;
+            statusEl.textContent = message;
+        }
+        
+        // Add log entry
+        function addLogEntry(type, message) {
+            const logEl = document.getElementById('eventLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = `[${timestamp}] ${message}`;
+            
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        // Clear log
+        function clearLog() {
+            document.getElementById('eventLog').innerHTML = '<div class="log-entry info">Log cleared</div>';
+        }
+        
+        // Start elapsed time timer
+        function startElapsedTimer() {
+            updateInterval = setInterval(() => {
+                if (startTime) {
+                    const elapsed = Math.floor((new Date() - startTime) / 1000);
+                    document.getElementById('elapsedTime').textContent = elapsed + 's';
+                }
+            }, 1000);
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWebSocket();
+        });
+    </script>
+</body>
+</html>

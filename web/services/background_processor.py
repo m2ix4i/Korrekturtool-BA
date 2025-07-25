@@ -9,7 +9,7 @@ from queue import Queue, Empty
 from typing import Optional
 
 from web.services.job_manager import JobManager
-from web.services.processor_integration import ProcessorIntegration
+from web.services.enhanced_processor_integration import EnhancedProcessorIntegration 
 from web.models.job import JobStatus
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class BackgroundProcessor:
             return
         
         self.job_manager = JobManager()
-        self.processor_integration = ProcessorIntegration()
+        self.processor_integration = EnhancedProcessorIntegration()
         
         # Job queue and worker thread
         self.job_queue = Queue()
@@ -146,17 +146,12 @@ class BackgroundProcessor:
             # Start job
             self.job_manager.start_job(job_id)
             
-            # Set up progress callback
-            self.processor_integration.set_progress_callback(
-                self.job_manager.update_job_progress,
-                job_id
-            )
-            
-            # Process document
+            # Process document with enhanced progress tracking
             result = self.processor_integration.process_document(
                 input_file_path=job.file_path,
                 processing_mode=job.processing_mode,
                 categories=job.options.categories,
+                job_id=job_id,
                 output_filename=job.options.output_filename
             )
             

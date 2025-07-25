@@ -72,6 +72,10 @@ def create_app(config_class=WebConfig):
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp)
     
+    # Register test blueprint for development
+    from web.main.test_routes import test_bp
+    app.register_blueprint(test_bp)
+    
     # Register error handlers
     register_error_handlers(app)
     
