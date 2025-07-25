@@ -15,6 +15,11 @@ class FileProcessingError(Exception):
     pass
 
 
+class ProcessingError(Exception):
+    """Exception raised for document processing errors"""
+    pass
+
+
 def create_error_response(error_type: str, message: str, status_code: int):
     """
     Create standardized error response

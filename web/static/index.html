@@ -13,7 +13,7 @@
             color: #1d1d1f;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
@@ -30,37 +30,171 @@
             color: #86868b;
             margin-bottom: 40px;
         }
-        .status {
+        
+        /* Upload Area Styles */
+        .upload-area {
+            border: 2px dashed #007aff;
+            border-radius: 12px;
+            padding: 60px 20px;
             text-align: center;
-            padding: 20px;
-            background: #e8f5e8;
-            border-radius: 8px;
             margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9ff;
         }
-        .status.warning {
-            background: #fff3cd;
-            color: #856404;
+        .upload-area:hover, .upload-area.dragover {
+            background: #e8f2ff;
+            border-color: #0056cc;
         }
-        .api-info {
+        .upload-area.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .upload-text {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .upload-subtext {
+            color: #86868b;
+            font-size: 14px;
+        }
+        
+        /* Processing Configuration */
+        .config-section {
             background: #f8f9fa;
             border-radius: 8px;
             padding: 20px;
-            margin-top: 30px;
+            margin-bottom: 20px;
+            display: none;
         }
-        .api-info h3 {
-            margin-top: 0;
-            color: #495057;
+        .config-section.active {
+            display: block;
         }
-        .endpoint {
-            font-family: 'SF Mono', Monaco, monospace;
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .config-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Progress and Status */
+        .progress-section {
+            display: none;
+            margin-bottom: 20px;
+        }
+        .progress-section.active {
+            display: block;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
             background: #e9ecef;
-            padding: 4px 8px;
             border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #007aff;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .progress-text {
+            text-align: center;
+            color: #495057;
             font-size: 14px;
         }
-        .coming-soon {
-            color: #ffc107;
+        
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #0056cc;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Results Section */
+        .results-section {
+            display: none;
+            margin-top: 30px;
+        }
+        .results-section.active {
+            display: block;
+        }
+        .result-item {
+            background: #e8f5e8;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .result-item.error {
+            background: #ffe6e6;
+        }
+        
+        /* Form Elements */
+        select, input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        /* Hidden file input */
+        #fileInput {
+            display: none;
+        }
+        
+        /* Status badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .status-badge.processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-badge.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-badge.failed {
+            background: #f8d7da;
+            color: #721c24;
         }
     </style>
 </head>
@@ -69,36 +203,351 @@
         <h1>🎓 Korrekturtool für Wissenschaftliche Arbeiten</h1>
         <p class="subtitle">KI-gestützte Korrektur deutscher Bachelorarbeiten</p>
         
-        <div class="status">
-            ✅ Backend-Server läuft erfolgreich<br>
-            <small>Version 1.0.0 - Web Interface in Entwicklung</small>
+        <!-- File Upload Area -->
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">DOCX-Datei hier ablegen oder klicken zum Auswählen</div>
+            <div class="upload-subtext">Unterstützt werden Word-Dokumente bis 50 MB</div>
         </div>
+        <input type="file" id="fileInput" accept=".docx" />
         
-        <div class="status warning">
-            🚧 Web-Interface wird gerade entwickelt<br>
-            <small>Bitte verwenden Sie vorerst die CLI-Version:<br>
-            <code>python main_complete_advanced.py dokument.docx</code></small>
-        </div>
-        
-        <div class="api-info">
-            <h3>🔧 API Endpoints</h3>
-            <p><strong>Verfügbar:</strong></p>
-            <ul>
-                <li><span class="endpoint">GET /health</span> - Server Status</li>
-                <li><span class="endpoint">GET /api/v1/info</span> - API Informationen</li>
-            </ul>
+        <!-- Processing Configuration -->
+        <div class="config-section" id="configSection">
+            <h3>⚙️ Verarbeitungsoptionen</h3>
             
-            <p><strong>In Entwicklung:</strong></p>
-            <ul>
-                <li><span class="endpoint">POST /api/v1/upload</span> <span class="coming-soon">- Datei hochladen</span></li>
-                <li><span class="endpoint">POST /api/v1/process</span> <span class="coming-soon">- Dokument verarbeiten</span></li>
-                <li><span class="endpoint">GET /api/v1/status/{job_id}</span> <span class="coming-soon">- Job Status</span></li>
-                <li><span class="endpoint">GET /api/v1/download/{file_id}</span> <span class="coming-soon">- Ergebnis herunterladen</span></li>
-            </ul>
+            <div class="config-row">
+                <label for="processingMode">Verarbeitungsmodus:</label>
+                <select id="processingMode">
+                    <option value="complete">Vollständig (empfohlen)</option>
+                    <option value="optimized">Leistungsoptimiert</option>
+                </select>
+            </div>
+            
+            <div class="config-row">
+                <label for="analysisCategories">Analysekategorien:</label>
+                <select id="analysisCategories" multiple>
+                    <option value="grammar" selected>Grammatik</option>
+                    <option value="style" selected>Stil</option>
+                    <option value="clarity" selected>Klarheit</option>
+                    <option value="academic" selected>Wissenschaftlichkeit</option>
+                </select>
+            </div>
+            
+            <div class="config-row">
+                <label for="outputFilename">Ausgabedatei (optional):</label>
+                <input type="text" id="outputFilename" placeholder="dokument_korrigiert.docx" />
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-primary" id="startProcessing">🚀 Korrektur starten</button>
+                <button class="btn btn-secondary" id="cancelUpload" style="margin-left: 10px;">❌ Abbrechen</button>
+            </div>
+        </div>
+        
+        <!-- Progress Section -->
+        <div class="progress-section" id="progressSection">
+            <h3>📊 Verarbeitungsfortschritt</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Initialisierung...</div>
+            <div style="text-align: center; margin-top: 15px;">
+                <span class="status-badge processing" id="statusBadge">Verarbeitung</span>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <h3>✅ Ergebnisse</h3>
+            <div id="resultsList"></div>
         </div>
     </div>
     
     <script>
+        // Global variables
+        let currentFileId = null;
+        let currentJobId = null;
+        let progressInterval = null;
+        
+        // DOM elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const configSection = document.getElementById('configSection');
+        const progressSection = document.getElementById('progressSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const startProcessingBtn = document.getElementById('startProcessing');
+        const cancelUploadBtn = document.getElementById('cancelUpload');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const statusBadge = document.getElementById('statusBadge');
+        const resultsList = document.getElementById('resultsList');
+        
+        // Event listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        startProcessingBtn.addEventListener('click', startProcessing);
+        cancelUploadBtn.addEventListener('click', cancelUpload);
+        
+        // Drag and drop handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+        
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        }
+        
+        // File handling
+        function handleFile(file) {
+            if (!file.name.toLowerCase().endsWith('.docx')) {
+                showError('Bitte wählen Sie eine DOCX-Datei aus.');
+                return;
+            }
+            
+            if (file.size > 50 * 1024 * 1024) {
+                showError('Die Datei ist zu groß. Maximale Größe: 50 MB');
+                return;
+            }
+            
+            uploadFile(file);
+        }
+        
+        // Upload file
+        async function uploadFile(file) {
+            try {
+                uploadArea.classList.add('disabled');
+                updateUploadAreaText('📤 Datei wird hochgeladen...', 'Bitte warten...');
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch('/api/v1/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentFileId = data.file_id;
+                    showConfigSection(data.filename);
+                } else {
+                    throw new Error(data.message || 'Upload failed');
+                }
+            } catch (error) {
+                showError('Upload fehlgeschlagen: ' + error.message);
+                resetUploadArea();
+            }
+        }
+        
+        // Show config section
+        function showConfigSection(filename) {
+            updateUploadAreaText('✅ Datei hochgeladen: ' + filename, 'Konfigurieren Sie die Verarbeitungsoptionen unten');
+            configSection.classList.add('active');
+        }
+        
+        // Start processing
+        async function startProcessing() {
+            try {
+                const processingMode = document.getElementById('processingMode').value;
+                const categoriesSelect = document.getElementById('analysisCategories');
+                const categories = Array.from(categoriesSelect.selectedOptions).map(option => option.value);
+                const outputFilename = document.getElementById('outputFilename').value;
+                
+                if (categories.length === 0) {
+                    showError('Bitte wählen Sie mindestens eine Analysekategorie aus.');
+                    return;
+                }
+                
+                const requestData = {
+                    file_id: currentFileId,
+                    processing_mode: processingMode,
+                    categories: categories
+                };
+                
+                if (outputFilename.trim()) {
+                    requestData.output_filename = outputFilename.trim();
+                }
+                
+                const response = await fetch('/api/v1/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentJobId = data.job_id;
+                    showProgressSection();
+                    startProgressTracking();
+                } else {
+                    throw new Error(data.message || 'Processing failed');
+                }
+            } catch (error) {
+                showError('Verarbeitung fehlgeschlagen: ' + error.message);
+            }
+        }
+        
+        // Show progress section
+        function showProgressSection() {
+            configSection.classList.remove('active');
+            progressSection.classList.add('active');
+            uploadArea.style.display = 'none';
+        }
+        
+        // Start progress tracking
+        function startProgressTracking() {
+            progressInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/v1/status/${currentJobId}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        updateProgress(data);
+                        
+                        if (data.status === 'completed' || data.status === 'failed') {
+                            clearInterval(progressInterval);
+                            showResults(data);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error tracking progress:', error);
+                }
+            }, 2000); // Check every 2 seconds
+        }
+        
+        // Update progress
+        function updateProgress(data) {
+            const progress = data.progress || 0;
+            progressFill.style.width = `${progress}%`;
+            progressText.textContent = data.message || 'Verarbeitung läuft...';
+            
+            // Update status badge
+            statusBadge.textContent = data.status === 'processing' ? 'Verarbeitung' : 
+                                     data.status === 'completed' ? 'Abgeschlossen' : 
+                                     data.status === 'failed' ? 'Fehlgeschlagen' : 'Unbekannt';
+            statusBadge.className = `status-badge ${data.status}`;
+        }
+        
+        // Show results
+        function showResults(data) {
+            progressSection.classList.remove('active');
+            resultsSection.classList.add('active');
+            
+            if (data.status === 'completed') {
+                resultsList.innerHTML = `
+                    <div class="result-item">
+                        <h4>✅ Verarbeitung erfolgreich abgeschlossen</h4>
+                        <p><strong>Verarbeitungszeit:</strong> ${getProcessingTime(data)}</p>
+                        <p><strong>Status:</strong> ${data.message}</p>
+                        <div style="margin-top: 15px;">
+                            <a href="/api/v1/download/${currentFileId}" class="btn btn-primary">
+                                📥 Korrigierte Datei herunterladen
+                            </a>
+                            <button class="btn btn-secondary" onclick="resetApplication()" style="margin-left: 10px;">
+                                🔄 Neue Datei verarbeiten
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultsList.innerHTML = `
+                    <div class="result-item error">
+                        <h4>❌ Verarbeitung fehlgeschlagen</h4>
+                        <p><strong>Error:</strong> ${data.message}</p>
+                        <p><strong>Details:</strong> ${data.error || 'Keine weiteren Details verfügbar'}</p>
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-primary" onclick="resetApplication()">
+                                🔄 Erneut versuchen
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Helper functions
+        function updateUploadAreaText(mainText, subText) {
+            uploadArea.querySelector('.upload-text').textContent = mainText;
+            uploadArea.querySelector('.upload-subtext').textContent = subText;
+        }
+        
+        function resetUploadArea() {
+            uploadArea.classList.remove('disabled');
+            updateUploadAreaText('DOCX-Datei hier ablegen oder klicken zum Auswählen', 'Unterstützt werden Word-Dokumente bis 50 MB');
+        }
+        
+        function showError(message) {
+            alert('Fehler: ' + message);
+        }
+        
+        function cancelUpload() {
+            if (currentFileId) {
+                fetch(`/api/v1/upload/${currentFileId}/cleanup`, { method: 'DELETE' });
+            }
+            resetApplication();
+        }
+        
+        function resetApplication() {
+            // Clear intervals
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            
+            // Reset variables
+            currentFileId = null;
+            currentJobId = null;
+            
+            // Reset UI
+            uploadArea.style.display = 'block';
+            resetUploadArea();
+            configSection.classList.remove('active');
+            progressSection.classList.remove('active');
+            resultsSection.classList.remove('active');
+            
+            // Reset form
+            fileInput.value = '';
+            document.getElementById('outputFilename').value = '';
+        }
+        
+        function getProcessingTime(data) {
+            if (data.created_at && data.completed_at) {
+                const start = new Date(data.created_at);
+                const end = new Date(data.completed_at);
+                const seconds = Math.round((end - start) / 1000);
+                return `${seconds} Sekunden`;
+            }
+            return 'Unbekannt';
+        }
+        
+        // Initialize application
+        console.log('🚀 Korrekturtool Web Interface geladen');
+        
         // Test API connectivity
         fetch('/api/v1/info')
             .then(response => response.json())
@@ -107,6 +556,7 @@
             })
             .catch(error => {
                 console.error('❌ API Connection failed:', error);
+                showError('Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie es später erneut.');
             });
     </script>
 </body>

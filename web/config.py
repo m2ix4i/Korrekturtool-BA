@@ -36,6 +36,15 @@ class Config:
     # Database configuration (for job management)
     DATABASE_URL = os.environ.get('DATABASE_URL') or 'sqlite:///jobs.db'
     
+    # WebSocket configuration
+    WEBSOCKET_PING_TIMEOUT = int(os.environ.get('WEBSOCKET_PING_TIMEOUT', 60))
+    WEBSOCKET_PING_INTERVAL = int(os.environ.get('WEBSOCKET_PING_INTERVAL', 25))
+    WEBSOCKET_MAX_CONNECTIONS = int(os.environ.get('WEBSOCKET_MAX_CONNECTIONS', 100))
+    
+    # Progress tracking configuration
+    PROGRESS_UPDATE_INTERVAL = float(os.environ.get('PROGRESS_UPDATE_INTERVAL', 1.0))
+    JOB_CLEANUP_TIMEOUT = int(os.environ.get('JOB_CLEANUP_TIMEOUT', 3600))  # 1 hour
+    
     @classmethod
     def get_required_directories(cls):
         """Return list of directories that need to exist"""
