@@ -1,0 +1,566 @@
+/**
+ * Enhanced Configuration CSS - Issue #8 Implementation
+ * Korrekturtool für Wissenschaftliche Arbeiten
+ * Styling for enhanced configuration UI with radio buttons, checkboxes, tooltips, and advanced options
+ */
+
+/* ========================================
+   Configuration Custom Properties
+   ======================================== */
+:root {
+    /* Configuration Color Scheme */
+    --config-primary: #007aff;
+    --config-primary-hover: #0056b3;
+    --config-primary-light: #e8f2ff;
+    --config-secondary: #6c757d;
+    --config-success: #28a745;
+    --config-warning: #ffc107;
+    --config-error: #dc3545;
+    
+    /* Configuration Spacing */
+    --config-group-spacing: 24px;
+    --config-option-spacing: 16px;
+    --config-padding: 20px;
+    --config-border-radius: 12px;
+    
+    /* Animation Properties */
+    --config-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --config-hover-scale: 1.02;
+    --config-active-scale: 0.98;
+    
+    /* Shadow Properties */
+    --config-shadow-light: 0 2px 8px rgba(0, 122, 255, 0.1);
+    --config-shadow-medium: 0 4px 16px rgba(0, 122, 255, 0.15);
+    --config-shadow-hover: 0 8px 24px rgba(0, 122, 255, 0.2);
+}
+
+/* ========================================
+   Configuration Groups and Layout
+   ======================================== */
+.config-group {
+    margin-bottom: var(--config-group-spacing);
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--config-border-radius);
+    padding: var(--config-padding);
+    box-shadow: var(--config-shadow-light);
+    transition: var(--config-transition);
+}
+
+.config-group:hover {
+    box-shadow: var(--config-shadow-medium);
+    transform: translateY(-1px);
+}
+
+.config-fieldset {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.config-legend {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.config-legend.required::after {
+    content: '*';
+    color: var(--config-error);
+    margin-left: 4px;
+}
+
+/* ========================================
+   Radio Button Styling
+   ======================================== */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--config-option-spacing);
+}
+
+.radio-option {
+    position: relative;
+    border: 2px solid var(--border-color);
+    border-radius: var(--config-border-radius);
+    padding: 16px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    transition: var(--config-transition);
+    cursor: pointer;
+}
+
+.radio-option:hover {
+    border-color: var(--config-primary);
+    background: linear-gradient(145deg, var(--config-primary-light) 0%, #ffffff 100%);
+    transform: scale(var(--config-hover-scale));
+    box-shadow: var(--config-shadow-hover);
+}
+
+.radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radio-option input[type="radio"]:checked + .radio-label {
+    color: var(--config-primary);
+}
+
+.radio-option input[type="radio"]:checked ~ * {
+    border-color: var(--config-primary);
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+    border-color: var(--config-primary);
+    background: linear-gradient(145deg, var(--config-primary-light) 0%, #ffffff 100%);
+    box-shadow: var(--config-shadow-medium);
+}
+
+.radio-option:has(input[type="radio"]:checked)::before {
+    content: '✓';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    background: var(--config-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.radio-label {
+    display: block;
+    cursor: pointer;
+    margin: 0;
+    padding-right: 40px;
+}
+
+.radio-title {
+    display: block;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    color: var(--text-color);
+}
+
+.radio-description {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* ========================================
+   Checkbox Styling
+   ======================================== */
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--config-option-spacing);
+}
+
+.checkbox-option {
+    position: relative;
+    border: 2px solid var(--border-color);
+    border-radius: var(--config-border-radius);
+    padding: 16px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    transition: var(--config-transition);
+    cursor: pointer;
+}
+
+.checkbox-option:hover {
+    border-color: var(--config-primary);
+    background: linear-gradient(145deg, var(--config-primary-light) 0%, #ffffff 100%);
+    transform: scale(var(--config-hover-scale));
+    box-shadow: var(--config-shadow-hover);
+}
+
+.checkbox-option input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.checkbox-option input[type="checkbox"]:checked + .checkbox-label {
+    color: var(--config-primary);
+}
+
+.checkbox-option:has(input[type="checkbox"]:checked) {
+    border-color: var(--config-success);
+    background: linear-gradient(145deg, #e8f5e8 0%, #ffffff 100%);
+    box-shadow: var(--config-shadow-medium);
+}
+
+.checkbox-option:has(input[type="checkbox"]:checked)::before {
+    content: '✓';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    background: var(--config-success);
+    color: white;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.checkbox-label {
+    display: block;
+    cursor: pointer;
+    margin: 0;
+    padding-right: 40px;
+}
+
+.checkbox-title {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 4px;
+    color: var(--text-color);
+}
+
+.checkbox-description {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* ========================================
+   Estimation Panel Styling
+   ======================================== */
+.estimation-panel {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid var(--config-primary);
+    border-radius: var(--config-border-radius);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    box-shadow: var(--config-shadow-medium);
+}
+
+.estimation-item {
+    text-align: center;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.estimation-label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.estimation-value {
+    display: block;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--config-primary);
+}
+
+/* ========================================
+   Advanced Options Toggle
+   ======================================== */
+.advanced-toggle {
+    width: 100%;
+    background: linear-gradient(145deg, #f1f3f4 0%, #e8eaed 100%);
+    border: 2px solid var(--border-color);
+    border-radius: var(--config-border-radius);
+    padding: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: var(--config-transition);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.advanced-toggle:hover {
+    background: linear-gradient(145deg, var(--config-primary-light) 0%, #f1f3f4 100%);
+    border-color: var(--config-primary);
+    color: var(--config-primary);
+    transform: scale(var(--config-hover-scale));
+}
+
+.advanced-toggle:active {
+    transform: scale(var(--config-active-scale));
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+    font-size: 1.2rem;
+}
+
+.advanced-toggle[aria-expanded="true"] .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.advanced-options {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+    padding: 0 20px;
+}
+
+.advanced-options[aria-hidden="false"] {
+    max-height: 300px;
+    padding: 20px;
+    border-top: 2px solid var(--border-color);
+    margin-top: 16px;
+}
+
+/* ========================================
+   Tooltip System
+   ======================================== */
+.tooltip-trigger {
+    position: relative;
+    cursor: help;
+    color: var(--config-primary);
+    font-size: 0.9rem;
+    margin-left: 4px;
+    transition: var(--config-transition);
+}
+
+.tooltip-trigger:hover {
+    color: var(--config-primary-hover);
+    transform: scale(1.1);
+}
+
+.tooltip-trigger:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text-color);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: var(--z-tooltip);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: tooltipFadeIn 0.3s ease-out;
+}
+
+.tooltip-trigger:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--text-color);
+    z-index: var(--z-tooltip);
+}
+
+@keyframes tooltipFadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateX(-50%) translateY(4px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateX(-50%) translateY(0); 
+    }
+}
+
+/* ========================================
+   Enhanced Form Elements
+   ======================================== */
+.config-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 16px;
+}
+
+.config-row label {
+    flex: 0 0 auto;
+    min-width: 160px;
+    margin-bottom: 0;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+}
+
+.config-row select,
+.config-row input[type="text"] {
+    flex: 1;
+    max-width: 300px;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--config-transition);
+    background: white;
+}
+
+.config-row select:focus,
+.config-row input[type="text"]:focus {
+    outline: none;
+    border-color: var(--config-primary);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.config-row select:hover,
+.config-row input[type="text"]:hover {
+    border-color: var(--config-primary);
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+@media (max-width: 768px) {
+    .config-group {
+        margin-bottom: 20px;
+        padding: 16px;
+    }
+    
+    .radio-group,
+    .checkbox-group {
+        gap: 12px;
+    }
+    
+    .checkbox-group {
+        grid-template-columns: 1fr;
+    }
+    
+    .estimation-panel {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 16px;
+    }
+    
+    .config-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .config-row label {
+        min-width: auto;
+    }
+    
+    .config-row select,
+    .config-row input[type="text"] {
+        max-width: none;
+    }
+    
+    .radio-option,
+    .checkbox-option {
+        padding: 12px;
+    }
+    
+    .radio-title,
+    .checkbox-title {
+        font-size: 1rem;
+    }
+    
+    .radio-description,
+    .checkbox-description {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .config-group {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .estimation-panel {
+        padding: 12px;
+    }
+    
+    .estimation-item {
+        padding: 8px;
+    }
+    
+    .tooltip-trigger:hover::after {
+        white-space: normal;
+        max-width: 200px;
+        text-align: center;
+    }
+}
+
+/* ========================================
+   Animation Enhancements
+   ======================================== */
+.config-group {
+    animation: configFadeIn 0.5s ease-out;
+}
+
+@keyframes configFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   Dark Theme Support
+   ======================================== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --config-primary-light: #1a2332;
+    }
+    
+    .config-group {
+        background: linear-gradient(145deg, #2c3e50 0%, #34495e 100%);
+        border-color: #5a6c7d;
+    }
+    
+    .radio-option,
+    .checkbox-option {
+        background: linear-gradient(145deg, #34495e 0%, #2c3e50 100%);
+        border-color: #5a6c7d;
+    }
+    
+    .radio-option:hover,
+    .checkbox-option:hover {
+        background: linear-gradient(145deg, #1a2332 0%, #34495e 100%);
+    }
+    
+    .estimation-panel {
+        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+    }
+    
+    .estimation-item {
+        background: #2c3e50;
+    }
+    
+    .advanced-toggle {
+        background: linear-gradient(145deg, #34495e 0%, #2c3e50 100%);
+        border-color: #5a6c7d;
+    }
+}
