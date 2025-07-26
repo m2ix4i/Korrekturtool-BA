@@ -94,6 +94,16 @@
     display: none;
 }
 
+.upload-area.file-selected {
+    background: linear-gradient(var(--upload-gradient-angle), #e8f5e8 0%, #d4edda 100%);
+    border-color: #28a745;
+    box-shadow: 0 4px 14px rgba(40, 167, 69, 0.2);
+}
+
+.upload-area.file-selected .upload-icon {
+    filter: drop-shadow(0 2px 4px rgba(40, 167, 69, 0.3));
+}
+
 .upload-icon {
     font-size: var(--upload-icon-size);
     margin-bottom: var(--spacing-lg);
