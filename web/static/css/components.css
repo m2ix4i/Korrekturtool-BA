@@ -1,0 +1,518 @@
+/**
+ * Components CSS - Reusable UI component styles
+ * Korrekturtool für Wissenschaftliche Arbeiten
+ * Component-based architecture for maintainability
+ */
+
+/* ========================================
+   Component-Specific Custom Properties
+   ======================================== */
+:root {
+    /* Upload Component */
+    --upload-icon-size: 48px;
+    --upload-gradient-angle: 145deg;
+    --upload-gradient-start: #f8f9ff;
+    --upload-gradient-end: #e8f2ff;
+    --upload-dragover-scale: 1.02;
+    --upload-border-width: 2px;
+    
+    /* Progress Component */
+    --progress-height: 8px;
+    --progress-animation-duration: 2s;
+    --progress-shimmer-width: 200px;
+    
+    /* Button Component */
+    --button-hover-scale: 1.02;
+    --button-active-scale: 0.98;
+    --button-gradient-primary-start: #007aff;
+    --button-gradient-primary-end: #0056b3;
+    --button-gradient-secondary-start: #f1f3f4;
+    --button-gradient-secondary-end: #e8eaed;
+    
+    /* Animation Timing */
+    --animation-bounce-duration: 0.15s;
+    --animation-fade-duration: 0.2s;
+    --animation-scale-duration: 0.1s;
+    
+    /* Z-index layers */
+    --z-dropdown: 1000;
+    --z-modal: 1050;
+    --z-tooltip: 1100;
+}
+
+/* ========================================
+   Upload Area Component
+   ======================================== */
+.upload-area {
+    border: var(--upload-border-width) dashed var(--primary-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xxl) var(--spacing-lg);
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    background: linear-gradient(var(--upload-gradient-angle), var(--upload-gradient-start) 0%, var(--upload-gradient-end) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(0, 122, 255, 0.05) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.upload-area:hover::before,
+.upload-area.dragover::before {
+    opacity: 1;
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+    background: linear-gradient(var(--upload-gradient-angle), #e8f2ff 0%, #d0e7ff 100%);
+    border-color: var(--primary-hover);
+    transform: translateY(-2px) scale(var(--upload-dragover-scale));
+    box-shadow: 0 var(--progress-height) 25px rgba(0, 122, 255, var(--animation-bounce-duration));
+}
+
+.upload-area.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: linear-gradient(var(--upload-gradient-angle), #f5f5f5 0%, #e9e9e9 100%);
+    border-color: var(--border-color);
+    transform: none;
+    box-shadow: none;
+}
+
+.upload-area.disabled::before {
+    display: none;
+}
+
+.upload-icon {
+    font-size: var(--upload-icon-size);
+    margin-bottom: var(--spacing-lg);
+    display: block;
+    filter: drop-shadow(0 2px 4px rgba(0, 122, 255, var(--animation-fade-duration)));
+}
+
+.upload-text {
+    font-size: var(--font-size-large);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-color);
+}
+
+.upload-subtext {
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-normal);
+}
+
+/* ========================================
+   Configuration Section Component
+   ======================================== */
+.config-section {
+    background: linear-gradient(145deg, #f8f9fa 0%, #f1f3f4 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.config-section h3 {
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.config-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    gap: var(--spacing-md);
+}
+
+.config-row:last-child {
+    margin-bottom: 0;
+}
+
+.config-row label {
+    flex: 0 0 auto;
+    min-width: 140px;
+    margin-bottom: 0;
+    font-weight: var(--font-weight-medium);
+}
+
+.config-row select,
+.config-row input {
+    flex: 1;
+    max-width: 300px;
+}
+
+.config-actions {
+    text-align: center;
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+/* ========================================
+   Progress Section Component
+   ======================================== */
+.progress-section {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.progress-section h3 {
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.progress-bar {
+    width: 100%;
+    height: var(--progress-height);
+    background: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: var(--spacing-sm);
+    position: relative;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color) 0%, #4da6ff 100%);
+    transition: width var(--transition-normal);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: progress-shine 2s ease-in-out infinite;
+}
+
+@keyframes progress-shine {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-text {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+    margin-bottom: var(--spacing-md);
+    font-weight: var(--font-weight-medium);
+}
+
+.progress-status {
+    text-align: center;
+}
+
+/* ========================================
+   Results Section Component
+   ======================================== */
+.results-section {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+}
+
+.results-section h3 {
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.result-item {
+    background: linear-gradient(145deg, #e8f5e8 0%, #d4edda 100%);
+    border: 1px solid #c3e6cb;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.1);
+}
+
+.result-item.error {
+    background: linear-gradient(145deg, #ffe6e6 0%, #f8d7da 100%);
+    border-color: #f5c6cb;
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.1);
+}
+
+.result-item h4 {
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+}
+
+.result-item p {
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-small);
+}
+
+.result-item p:last-of-type {
+    margin-bottom: var(--spacing-md);
+}
+
+.result-actions {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   Button Components
+   ======================================== */
+.btn {
+    display: inline-block;
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: all var(--transition-fast);
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: left var(--transition-normal);
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #0056cc 100%);
+    color: white;
+    box-shadow: 0 4px 14px 0 rgba(0, 122, 255, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--primary-hover) 0%, #004bb5 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px 0 rgba(0, 122, 255, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px 0 rgba(0, 122, 255, 0.3);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #5a6268 100%);
+    color: white;
+    box-shadow: 0 4px 14px 0 rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5a6268 0%, #4e555b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px 0 rgba(108, 117, 125, 0.4);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn:disabled::before {
+    display: none;
+}
+
+.btn + .btn {
+    margin-left: var(--spacing-sm);
+}
+
+/* ========================================
+   Status Badge Component
+   ======================================== */
+.status-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 12px;
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: badge-shine 2s ease-in-out infinite;
+}
+
+@keyframes badge-shine {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+}
+
+.status-badge.pending {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    color: #495057;
+}
+
+.status-badge.processing {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #856404;
+}
+
+.status-badge.completed {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+}
+
+.status-badge.failed {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+}
+
+/* ========================================
+   Theme Toggle Component
+   ======================================== */
+.theme-toggle {
+    position: fixed;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    z-index: var(--z-index-dropdown);
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.theme-toggle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px var(--shadow-light);
+}
+
+.theme-toggle-icon {
+    font-size: 20px;
+    display: block;
+    line-height: 1;
+}
+
+/* ========================================
+   Loading States
+   ======================================== */
+.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   Error States
+   ======================================== */
+.error-message {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-medium);
+}

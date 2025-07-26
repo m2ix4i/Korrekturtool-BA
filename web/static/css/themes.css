@@ -1,0 +1,368 @@
+/**
+ * Themes CSS - Dark and Light theme system
+ * Korrekturtool für Wissenschaftliche Arbeiten
+ * CSS custom properties based theme system with automatic detection
+ */
+
+/* ========================================
+   Theme System Configuration
+   ======================================== */
+:root {
+    /* Theme detection support */
+    color-scheme: light dark;
+    
+    /* Animation preferences */
+    --theme-transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* ========================================
+   Light Theme (Default)
+   ======================================== */
+:root,
+[data-theme="light"] {
+    /* Primary colors */
+    --primary-color: #007aff;
+    --primary-hover: #0056cc;
+    --primary-light: #4da6ff;
+    --primary-dark: #004bb5;
+    
+    /* Secondary colors */
+    --secondary-color: #6c757d;
+    --secondary-hover: #5a6268;
+    --secondary-light: #8e9297;
+    --secondary-dark: #495057;
+    
+    /* Background colors */
+    --background-color: #f5f5f7;
+    --surface-color: #ffffff;
+    --surface-secondary: #f8f9fa;
+    --surface-tertiary: #e9ecef;
+    
+    /* Text colors */
+    --text-color: #1d1d1f;
+    --text-secondary: #86868b;
+    --text-tertiary: #aeaeb2;
+    --text-inverse: #ffffff;
+    
+    /* Border and divider colors */
+    --border-color: #e9ecef;
+    --border-light: #f1f3f4;
+    --border-dark: #dee2e6;
+    --divider-color: #e9ecef;
+    
+    /* Status colors */
+    --success-color: #28a745;
+    --success-light: #d4edda;
+    --success-dark: #155724;
+    --warning-color: #ffc107;
+    --warning-light: #fff3cd;
+    --warning-dark: #856404;
+    --error-color: #dc3545;
+    --error-light: #f8d7da;
+    --error-dark: #721c24;
+    --info-color: #17a2b8;
+    --info-light: #d1ecf1;
+    --info-dark: #0c5460;
+    
+    /* Shadow colors */
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    --shadow-medium: rgba(0, 0, 0, 0.15);
+    --shadow-dark: rgba(0, 0, 0, 0.2);
+    --shadow-primary: rgba(0, 122, 255, 0.3);
+    
+    /* Upload area specific */
+    --upload-bg-start: #f8f9ff;
+    --upload-bg-end: #e8f2ff;
+    --upload-hover-start: #e8f2ff;
+    --upload-hover-end: #d0e7ff;
+    --upload-disabled-start: #f5f5f5;
+    --upload-disabled-end: #e9e9e9;
+    
+    /* Configuration section */
+    --config-bg-start: #f8f9fa;
+    --config-bg-end: #f1f3f4;
+    
+    /* Progress section */
+    --progress-bg-start: #ffffff;
+    --progress-bg-end: #f8f9fa;
+    
+    /* Results section */
+    --result-success-start: #e8f5e8;
+    --result-success-end: #d4edda;
+    --result-error-start: #ffe6e6;
+    --result-error-end: #f8d7da;
+}
+
+/* ========================================
+   Dark Theme
+   ======================================== */
+[data-theme="dark"] {
+    /* Primary colors */
+    --primary-color: #0a84ff;
+    --primary-hover: #0969da;
+    --primary-light: #409cff;
+    --primary-dark: #0066cc;
+    
+    /* Secondary colors */
+    --secondary-color: #8e8e93;
+    --secondary-hover: #98989d;
+    --secondary-light: #aeaeb2;
+    --secondary-dark: #636366;
+    
+    /* Background colors */
+    --background-color: #000000;
+    --surface-color: #1c1c1e;
+    --surface-secondary: #2c2c2e;
+    --surface-tertiary: #3a3a3c;
+    
+    /* Text colors */
+    --text-color: #ffffff;
+    --text-secondary: #8e8e93;
+    --text-tertiary: #636366;
+    --text-inverse: #000000;
+    
+    /* Border and divider colors */
+    --border-color: #38383a;
+    --border-light: #48484a;
+    --border-dark: #2c2c2e;
+    --divider-color: #38383a;
+    
+    /* Status colors */
+    --success-color: #30d158;
+    --success-light: #1e3a1f;
+    --success-dark: #30d158;
+    --warning-color: #ff9f0a;
+    --warning-light: #3d2a00;
+    --warning-dark: #ff9f0a;
+    --error-color: #ff453a;
+    --error-light: #3d1a1d;
+    --error-dark: #ff453a;
+    --info-color: #64d2ff;
+    --info-light: #1a2d3d;
+    --info-dark: #64d2ff;
+    
+    /* Shadow colors */
+    --shadow-light: rgba(0, 0, 0, 0.3);
+    --shadow-medium: rgba(0, 0, 0, 0.4);
+    --shadow-dark: rgba(0, 0, 0, 0.5);
+    --shadow-primary: rgba(10, 132, 255, 0.3);
+    
+    /* Upload area specific */
+    --upload-bg-start: #1a1a2e;
+    --upload-bg-end: #16213e;
+    --upload-hover-start: #16213e;
+    --upload-hover-end: #0f1729;
+    --upload-disabled-start: #2c2c2e;
+    --upload-disabled-end: #1c1c1e;
+    
+    /* Configuration section */
+    --config-bg-start: #2c2c2e;
+    --config-bg-end: #1c1c1e;
+    
+    /* Progress section */
+    --progress-bg-start: #1c1c1e;
+    --progress-bg-end: #2c2c2e;
+    
+    /* Results section */
+    --result-success-start: #1e3a1f;
+    --result-success-end: #0d1f0e;
+    --result-error-start: #3d1a1d;
+    --result-error-end: #2d1316;
+}
+
+/* ========================================
+   System Preference Detection
+   ======================================== */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        /* Inherit dark theme variables when system prefers dark and no explicit light theme */
+        --primary-color: #0a84ff;
+        --primary-hover: #0969da;
+        --primary-light: #409cff;
+        --primary-dark: #0066cc;
+        
+        --secondary-color: #8e8e93;
+        --secondary-hover: #98989d;
+        --secondary-light: #aeaeb2;
+        --secondary-dark: #636366;
+        
+        --background-color: #000000;
+        --surface-color: #1c1c1e;
+        --surface-secondary: #2c2c2e;
+        --surface-tertiary: #3a3a3c;
+        
+        --text-color: #ffffff;
+        --text-secondary: #8e8e93;
+        --text-tertiary: #636366;
+        --text-inverse: #000000;
+        
+        --border-color: #38383a;
+        --border-light: #48484a;
+        --border-dark: #2c2c2e;
+        --divider-color: #38383a;
+        
+        --success-color: #30d158;
+        --success-light: #1e3a1f;
+        --success-dark: #30d158;
+        --warning-color: #ff9f0a;
+        --warning-light: #3d2a00;
+        --warning-dark: #ff9f0a;
+        --error-color: #ff453a;
+        --error-light: #3d1a1d;
+        --error-dark: #ff453a;
+        --info-color: #64d2ff;
+        --info-light: #1a2d3d;
+        --info-dark: #64d2ff;
+        
+        --shadow-light: rgba(0, 0, 0, 0.3);
+        --shadow-medium: rgba(0, 0, 0, 0.4);
+        --shadow-dark: rgba(0, 0, 0, 0.5);
+        --shadow-primary: rgba(10, 132, 255, 0.3);
+        
+        --upload-bg-start: #1a1a2e;
+        --upload-bg-end: #16213e;
+        --upload-hover-start: #16213e;
+        --upload-hover-end: #0f1729;
+        --upload-disabled-start: #2c2c2e;
+        --upload-disabled-end: #1c1c1e;
+        
+        --config-bg-start: #2c2c2e;
+        --config-bg-end: #1c1c1e;
+        
+        --progress-bg-start: #1c1c1e;
+        --progress-bg-end: #2c2c2e;
+        
+        --result-success-start: #1e3a1f;
+        --result-success-end: #0d1f0e;
+        --result-error-start: #3d1a1d;
+        --result-error-end: #2d1316;
+    }
+}
+
+/* ========================================
+   Theme Transition Effects
+   ======================================== */
+body,
+.section,
+.upload-area,
+.config-section,
+.progress-section,
+.results-section,
+.btn,
+.status-badge,
+.theme-toggle {
+    transition: var(--theme-transition);
+}
+
+/* ========================================
+   Theme-specific Component Overrides
+   ======================================== */
+
+/* Upload area theme adjustments */
+.upload-area {
+    background: linear-gradient(145deg, var(--upload-bg-start) 0%, var(--upload-bg-end) 100%);
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+    background: linear-gradient(145deg, var(--upload-hover-start) 0%, var(--upload-hover-end) 100%);
+}
+
+.upload-area.disabled {
+    background: linear-gradient(145deg, var(--upload-disabled-start) 0%, var(--upload-disabled-end) 100%);
+}
+
+/* Configuration section theme adjustments */
+.config-section {
+    background: linear-gradient(145deg, var(--config-bg-start) 0%, var(--config-bg-end) 100%);
+}
+
+/* Progress section theme adjustments */
+.progress-section {
+    background: linear-gradient(145deg, var(--progress-bg-start) 0%, var(--progress-bg-end) 100%);
+}
+
+/* Results section theme adjustments */
+.result-item {
+    background: linear-gradient(145deg, var(--result-success-start) 0%, var(--result-success-end) 100%);
+    border-color: var(--success-color);
+}
+
+.result-item.error {
+    background: linear-gradient(145deg, var(--result-error-start) 0%, var(--result-error-end) 100%);
+    border-color: var(--error-color);
+}
+
+/* Theme toggle icon changes */
+[data-theme="light"] .theme-toggle-icon::before {
+    content: "🌙";
+}
+
+[data-theme="dark"] .theme-toggle-icon::before {
+    content: "☀️";
+}
+
+/* Auto theme icon */
+:root:not([data-theme]) .theme-toggle-icon::before {
+    content: "🌓";
+}
+
+/* ========================================
+   High Contrast Mode Support
+   ======================================== */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: currentColor;
+        --text-secondary: var(--text-color);
+    }
+    
+    .btn {
+        border: 2px solid currentColor;
+    }
+    
+    .upload-area {
+        border-width: 3px;
+    }
+}
+
+/* ========================================
+   Reduced Motion Support
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --theme-transition: none;
+    }
+    
+    .theme-toggle:hover {
+        transform: none;
+    }
+    
+    .btn:hover {
+        transform: none;
+    }
+    
+    .upload-area:hover {
+        transform: none;
+    }
+}
+
+/* ========================================
+   Print Styles (Force Light Theme)
+   ======================================== */
+@media print {
+    :root,
+    [data-theme="dark"] {
+        --background-color: #ffffff;
+        --surface-color: #ffffff;
+        --text-color: #000000;
+        --text-secondary: #666666;
+        --border-color: #cccccc;
+        --shadow-light: none;
+        --shadow-medium: none;
+        --shadow-dark: none;
+    }
+    
+    .theme-toggle {
+        display: none;
+    }
+}
