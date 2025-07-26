@@ -9,6 +9,7 @@ import { ThemeManager } from './modules/theme-manager.js';
 import { EventBus } from './utils/event-bus.js';
 import { UploadHandler } from './handlers/upload-handler.js';
 import { ConfigManager } from './modules/config-manager.js';
+import { apiService } from './services/api-service.js';
 
 /**
  * Main Application Class
@@ -24,6 +25,7 @@ class KorrekturtoolApp {
         this.themeManager = null;
         this.uploadHandler = null;
         this.configManager = null;
+        this.apiService = apiService;
         
         // Application state
         this.state = {
@@ -464,8 +466,8 @@ class KorrekturtoolApp {
             const config = this.configManager.exportForProcessing();
             console.log('⚙️ Configuration for processing:', config);
             
-            // TODO: Implement actual processing logic
-            this.showSuccessMessage('Konfiguration validiert! Verarbeitung würde hier starten...');
+            // Start document processing
+            await this.processDocument(config);
             
             // Emit form submission event with configuration
             this.eventBus.emit('form:submitted', {
@@ -476,6 +478,116 @@ class KorrekturtoolApp {
         } catch (error) {
             console.error('❌ Form submission failed:', error);
             this.handleError(error, 'Fehler beim Verarbeiten der Konfiguration');
+        }
+    }
+    
+    /**
+     * Process document with AI analysis
+     * @param {Object} config - Configuration from config manager
+     */
+    async processDocument(config) {
+        try {
+            console.log('🚀 Starting document processing...');
+            
+            // 1. Validate prerequisites
+            const uploadState = this.uploadHandler.getState();
+            if (!uploadState.hasFile) {
+                throw new Error('Keine Datei ausgewählt. Bitte laden Sie zuerst eine DOCX-Datei hoch.');
+            }
+            
+            // 2. Set processing state
+            this.state.isProcessing = true;
+            this.showProcessingState();
+            
+            // 3. Upload file to server
+            console.log('📤 Uploading file:', uploadState.fileName);
+            const uploadResult = await this.apiService.uploadFile(uploadState.selectedFile);
+            this.state.currentFileId = uploadResult.file_id;
+            console.log('✅ File uploaded successfully, ID:', this.state.currentFileId);
+            
+            // 4. Prepare processing request
+            const processingRequest = {
+                file_id: this.state.currentFileId,
+                processing_mode: config.processing_mode,
+                categories: config.categories,
+                output_filename: config.output_filename
+            };
+            
+            // 5. Submit for processing
+            console.log('🤖 Submitting for AI processing...');
+            const processResult = await this.apiService.processDocument(processingRequest);
+            this.state.currentJobId = processResult.job_id;
+            console.log('✅ Processing started, Job ID:', this.state.currentJobId);
+            
+            // 6. Show success message
+            this.showSuccessMessage('Verarbeitung erfolgreich gestartet! Die KI analysiert Ihr Dokument...');
+            
+            // 7. Emit events for other components
+            this.eventBus.emit('processing:started', {
+                jobId: this.state.currentJobId,
+                fileId: this.state.currentFileId,
+                config: config
+            });
+            
+            // 8. Update UI to show processing state
+            this.showSection('progressSection');
+            
+        } catch (error) {
+            console.error('❌ Document processing failed:', error);
+            this.state.isProcessing = false;
+            this.handleError(error, 'Fehler beim Starten der Verarbeitung');
+        }
+    }
+    
+    /**
+     * Show processing state in UI
+     */
+    showProcessingState() {
+        console.log('🔄 Showing processing state...');
+        
+        // Update upload area to show processing
+        if (this.uploadHandler) {
+            this.uploadHandler.setProcessingState(true);
+        }
+        
+        // Show progress section
+        this.showSection('progressSection');
+        
+        // Hide configuration section
+        this.hideSection('configSection');
+    }
+    
+    /**
+     * Show a section by adding 'active' class
+     * @param {string} sectionId - The section element ID or key
+     */
+    showSection(sectionId) {
+        const section = typeof sectionId === 'string' 
+            ? document.getElementById(sectionId) || this.elements[sectionId]
+            : sectionId;
+            
+        if (section) {
+            section.classList.add('active');
+            console.log(`👁️ Section ${sectionId} shown`);
+        } else {
+            console.warn(`⚠️ Section ${sectionId} not found`);
+        }
+    }
+    
+    /**
+     * Hide a section by removing 'active' class
+     * @param {string} sectionId - The section element ID or key
+     */
+    hideSection(sectionId) {
+        const section = typeof sectionId === 'string' 
+            ? document.getElementById(sectionId) || this.elements[sectionId]
+            : sectionId;
+            
+        if (section) {
+            section.classList.remove('active');
+            console.log(`👁️ Section ${sectionId} hidden`);
+        } else {
+            console.warn(`⚠️ Section ${sectionId} not found`);
         }
     }
     

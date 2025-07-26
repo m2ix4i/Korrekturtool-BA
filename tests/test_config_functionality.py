@@ -471,9 +471,9 @@ class TestRequirementsCoverage:
         time_estimate = parsed_html.find(id='timeEstimate')
         assert time_estimate is not None, "Time estimate display missing"
         
-        # Check JavaScript has time calculation logic
+        # Check JavaScript has time calculation logic (updated for refactored code)
         assert "baseTimes" in config_js_content, "Base time data missing"
-        assert "finalTimeMin" in config_js_content, "Time calculation logic missing"
+        assert "calculateBaseTime" in config_js_content, "Time calculation logic missing"
     
     def test_requirement_tooltip_explanations(self, parsed_html, config_css_content):
         """
