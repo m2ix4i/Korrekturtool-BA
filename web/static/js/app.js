@@ -558,6 +558,40 @@ class KorrekturtoolApp {
     }
     
     /**
+     * Show a section by adding 'active' class
+     * @param {string} sectionId - The section element ID or key
+     */
+    showSection(sectionId) {
+        const section = typeof sectionId === 'string' 
+            ? document.getElementById(sectionId) || this.elements[sectionId]
+            : sectionId;
+            
+        if (section) {
+            section.classList.add('active');
+            console.log(`👁️ Section ${sectionId} shown`);
+        } else {
+            console.warn(`⚠️ Section ${sectionId} not found`);
+        }
+    }
+    
+    /**
+     * Hide a section by removing 'active' class
+     * @param {string} sectionId - The section element ID or key
+     */
+    hideSection(sectionId) {
+        const section = typeof sectionId === 'string' 
+            ? document.getElementById(sectionId) || this.elements[sectionId]
+            : sectionId;
+            
+        if (section) {
+            section.classList.remove('active');
+            console.log(`👁️ Section ${sectionId} hidden`);
+        } else {
+            console.warn(`⚠️ Section ${sectionId} not found`);
+        }
+    }
+    
+    /**
      * Reset application to initial state
      */
     resetApplication() {
