@@ -172,6 +172,8 @@ The backend systems are production-ready and provide:
 ## Environment Requirements
 
 ### Python Dependencies
+
+#### Production Dependencies
 ```bash
 python-docx==0.8.11      # Word document manipulation
 google-generativeai==0.8.3  # AI analysis
@@ -181,6 +183,29 @@ tqdm==4.66.5             # Progress bars
 lxml==6.0.0              # XML processing
 rapidfuzz                # Text matching (auto-installed)
 psutil                   # System monitoring (auto-installed)
+Flask                    # Web interface framework
+Flask-SocketIO           # Real-time web communication
+Celery                   # Background job processing
+Redis                    # Task queue and caching
+```
+
+#### Development Dependencies
+```bash
+pytest                   # Testing framework
+pytest-cov              # Coverage reporting
+pytest-mock             # Mocking utilities
+pytest-xdist            # Parallel test execution
+pytest-benchmark        # Performance benchmarking
+flake8                   # Code linting
+black                    # Code formatting
+isort                    # Import sorting
+mypy                     # Type checking
+bandit                   # Security analysis
+safety                   # Dependency vulnerability scanning
+factory-boy              # Test data factories
+Faker                    # Synthetic test data
+responses                # HTTP mocking
+freezegun                # Time mocking
 ```
 
 ### System Requirements
@@ -188,12 +213,93 @@ psutil                   # System monitoring (auto-installed)
 - Google Gemini API key
 - Minimum 4GB RAM (8GB+ recommended for large documents)
 - 100MB disk space for caching
+- Redis server (for web interface and background job processing)
 
 ### API Costs
 - Google Gemini 1.5 Flash: ~$0.10-0.50 per typical bachelor thesis
 - Cost estimation built into the system
 
-## Testing Strategy
+## Testing & Development Commands
+
+### Setup Development Environment
+```bash
+# Install all dependencies (production + development)
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Activate testing configuration (if needed)
+cp pytest.ini.backup pytest.ini
+cp tests/conftest.py.backup tests/conftest.py
+```
+
+### Running Tests
+```bash
+# Run all tests with coverage
+pytest --cov=src --cov-report=html --cov-report=term-missing
+
+# Run specific test categories
+pytest -m "unit"                    # Unit tests only
+pytest -m "integration"             # Integration tests
+pytest -m "not slow"                # Skip slow tests
+pytest -m "not api"                 # Skip API-dependent tests
+
+# Run tests in parallel
+pytest -n auto                      # Auto-detect CPU cores
+
+# Run specific test files
+pytest tests/test_advanced_analyzer_pytest.py
+pytest tests/test_docx_parser.py
+
+# Performance and benchmark tests
+pytest -m "benchmark" --benchmark-only
+pytest -m "slow" -v
+
+# Generate detailed HTML coverage report
+pytest --cov=src --cov-report=html
+# View report: open htmlcov/index.html
+```
+
+### Code Quality Commands
+```bash
+# Code formatting
+black .                             # Format code
+isort .                            # Sort imports
+
+# Code quality checks
+flake8 .                           # Linting
+mypy src/                          # Type checking
+
+# Security scanning
+bandit -r src/                     # Security analysis
+safety check                      # Dependency vulnerabilities
+```
+
+### Development Workflow
+```bash
+# Full development check (mirrors CI)
+pytest --cov=src --cov-report=xml --cov-fail-under=80
+flake8 . --count --max-complexity=10 --max-line-length=127
+black --check .
+isort --check-only .
+
+# Test main scripts
+python -c "import main_complete_advanced; print('✓ Import successful')"
+python -c "import main_performance_optimized; print('✓ Import successful')"
+```
+
+### Environment Variables for Testing
+```bash
+# Required for AI analyzer integration tests
+export GOOGLE_API_KEY="your_gemini_api_key"
+
+# Test environment configuration
+export TESTING="true"
+export LOG_LEVEL="DEBUG"
+
+# Run tests requiring API (skip if no key)
+pytest -m "requires_api_key"       # With API key
+pytest -m "not api"                # Without API key
+```
 
 ### Test Files Location
 - Test documents in `/archive/test_files/`
@@ -207,6 +313,48 @@ python main_complete_advanced.py "archive/test_files/test_document.docx"
 
 # Test performance system
 python main_performance_optimized.py "large_document.docx"
+```
+
+## Continuous Integration & Deployment
+
+### GitHub Actions CI Pipeline
+- **Multi-Python Support**: Automated testing on Python 3.9, 3.10, 3.11
+- **Test Coverage**: Minimum 80% coverage requirement with Codecov integration
+- **Security Scanning**: Automated vulnerability detection with Bandit and Safety
+- **Code Quality**: Automated linting with flake8 and formatting checks
+- **Performance Testing**: Benchmark tests and memory leak detection
+
+### Local CI Simulation
+```bash
+# Run the same tests as CI pipeline
+pytest tests/ -m "not api" -v --tb=short --cov=src --cov-report=xml
+pytest tests/ -m "api" -v --tb=short  # If API key available
+pytest tests/ -m "slow" -v --tb=short  # Performance tests
+
+# Full CI check locally
+pytest --cov=src --cov-report=xml --cov-fail-under=80
+flake8 . --count --max-complexity=10 --max-line-length=127
+black --check .
+isort --check-only .
+bandit -r src/
+safety check
+```
+
+### Web Interface Deployment
+```bash
+# Production deployment requirements
+export GOOGLE_API_KEY="your_key"
+export REDIS_URL="redis://localhost:6379"
+export CELERY_BROKER_URL="redis://localhost:6379"
+
+# Start Redis server
+redis-server
+
+# Start Celery worker (in separate terminal)
+celery -A web.app:celery worker --loglevel=info
+
+# Start Flask application
+python web/app.py
 ```
 
 ## Notes for UI Developer
