@@ -7,43 +7,6 @@
 import { EventBus } from '../utils/event-bus.js';
 
 /**
- * Configuration constants to eliminate magic numbers
- */
-const ESTIMATION_CONSTANTS = {
-    // Base cost ranges (in USD)
-    BASE_COSTS: {
-        complete: { min: 0.25, max: 0.75 },
-        performance: { min: 0.15, max: 0.45 }
-    },
-    
-    // Base time ranges (in seconds)
-    BASE_TIMES: {
-        complete: { min: 45, max: 120 },
-        performance: { min: 20, max: 60 }
-    },
-    
-    // Category complexity multipliers
-    CATEGORY_MULTIPLIERS: {
-        grammar: 1.0,
-        style: 1.2,
-        clarity: 1.1,
-        academic: 1.3
-    },
-    
-    // Priority and density modifiers
-    PRIORITY_MULTIPLIERS: {
-        normal: 1.0,
-        high: 1.3
-    },
-    
-    DENSITY_MULTIPLIERS: {
-        low: 0.7,
-        medium: 1.0,
-        high: 1.4
-    }
-};
-
-/**
  * Configuration Manager Class
  * Handles all configuration-related functionality including localStorage persistence,
  * real-time cost/time estimation, tooltips, and advanced options management
@@ -69,11 +32,22 @@ export class ConfigManager {
             }
         };
         
-        // Use extracted constants for estimation data
+        // Cost and time estimation data
         this.estimationData = {
-            baseCosts: ESTIMATION_CONSTANTS.BASE_COSTS,
-            baseTimes: ESTIMATION_CONSTANTS.BASE_TIMES,
-            categoryMultipliers: ESTIMATION_CONSTANTS.CATEGORY_MULTIPLIERS
+            baseCosts: {
+                complete: { min: 0.25, max: 0.75 },
+                performance: { min: 0.15, max: 0.45 }
+            },
+            baseTimes: {
+                complete: { min: 45, max: 120 },
+                performance: { min: 20, max: 60 }
+            },
+            categoryMultipliers: {
+                grammar: 1.0,
+                style: 1.2,
+                clarity: 1.1,
+                academic: 1.3
+            }
         };
         
         // DOM elements cache
@@ -296,100 +270,45 @@ export class ConfigManager {
      * Update cost and time estimations
      */
     updateEstimations() {
-        const estimationResults = this.calculateEstimations();
-        this.updateEstimationDisplay(estimationResults);
-        this.emitEstimationUpdate(estimationResults);
-        
-        console.log(`📊 Estimations updated: $${estimationResults.cost.min.toFixed(2)}-$${estimationResults.cost.max.toFixed(2)}, ${estimationResults.time.min}-${estimationResults.time.max}s`);
-    }
-    
-    /**
-     * Calculate cost and time estimations based on current configuration
-     * @returns {Object} Estimation results with cost and time ranges
-     */
-    calculateEstimations() {
-        const baseCost = this.calculateBaseCost();
-        const baseTime = this.calculateBaseTime();
-        const categoryMultiplier = this.calculateCategoryMultiplier();
-        const modifiers = this.calculateModifiers();
-        
-        return {
-            cost: {
-                min: baseCost.min * categoryMultiplier * modifiers.density,
-                max: baseCost.max * categoryMultiplier * modifiers.density
-            },
-            time: {
-                min: Math.round(baseTime.min * categoryMultiplier / modifiers.priority),
-                max: Math.round(baseTime.max * categoryMultiplier / modifiers.priority)
-            }
-        };
-    }
-    
-    /**
-     * Get base cost range for current processing mode
-     * @returns {Object} Base cost range {min, max}
-     */
-    calculateBaseCost() {
-        return this.estimationData.baseCosts[this.config.processingMode];
-    }
-    
-    /**
-     * Get base time range for current processing mode
-     * @returns {Object} Base time range {min, max}
-     */
-    calculateBaseTime() {
-        return this.estimationData.baseTimes[this.config.processingMode];
-    }
-    
-    /**
-     * Calculate category complexity multiplier based on selected categories
-     * @returns {number} Combined category multiplier
-     */
-    calculateCategoryMultiplier() {
-        const selectedCategories = Object.entries(this.config.analysisCategories)
-            .filter(([_, selected]) => selected)
-            .map(([category, _]) => category);
-        
-        if (selectedCategories.length === 0) return 1.0;
-        
-        const totalMultiplier = selectedCategories.reduce((total, category) => {
-            return total + (this.estimationData.categoryMultipliers[category] || 1.0);
-        }, 0);
-        
-        return totalMultiplier / selectedCategories.length;
-    }
-    
-    /**
-     * Calculate priority and density modifiers
-     * @returns {Object} Modifiers {priority, density}
-     */
-    calculateModifiers() {
+        const mode = this.config.processingMode;
+        const categories = this.config.analysisCategories;
         const priority = this.config.advancedOptions.processingPriority;
         const density = this.config.advancedOptions.commentDensity;
         
-        return {
-            priority: ESTIMATION_CONSTANTS.PRIORITY_MULTIPLIERS[priority] || 1.0,
-            density: ESTIMATION_CONSTANTS.DENSITY_MULTIPLIERS[density] || 1.0
-        };
-    }
-    
-    /**
-     * Update the estimation display elements
-     * @param {Object} estimationResults - Calculated estimation results
-     */
-    updateEstimationDisplay(estimationResults) {
-        const { cost, time } = estimationResults;
+        // Calculate base cost and time
+        const baseCost = this.estimationData.baseCosts[mode];
+        const baseTime = this.estimationData.baseTimes[mode];
         
-        this.elements.costEstimate.textContent = `$${cost.min.toFixed(2)} - $${cost.max.toFixed(2)}`;
-        this.elements.timeEstimate.textContent = `${time.min} - ${time.max} Sekunden`;
-    }
-    
-    /**
-     * Emit estimation update event
-     * @param {Object} estimationResults - Calculated estimation results
-     */
-    emitEstimationUpdate(estimationResults) {
-        this.eventBus.emit('config:estimation-updated', estimationResults);
+        // Apply category multipliers
+        const selectedCategories = Object.entries(categories)
+            .filter(([_, selected]) => selected)
+            .map(([category, _]) => category);
+        
+        const categoryMultiplier = selectedCategories.reduce((total, category) => {
+            return total + (this.estimationData.categoryMultipliers[category] || 1.0);
+        }, 0) / Math.max(selectedCategories.length, 1);
+        
+        // Apply priority and density modifiers
+        const priorityMultiplier = priority === 'high' ? 1.3 : 1.0;
+        const densityMultiplier = density === 'high' ? 1.4 : density === 'low' ? 0.7 : 1.0;
+        
+        // Calculate final estimates
+        const finalCostMin = baseCost.min * categoryMultiplier * densityMultiplier;
+        const finalCostMax = baseCost.max * categoryMultiplier * densityMultiplier;
+        const finalTimeMin = Math.round(baseTime.min * categoryMultiplier / priorityMultiplier);
+        const finalTimeMax = Math.round(baseTime.max * categoryMultiplier / priorityMultiplier);
+        
+        // Update display
+        this.elements.costEstimate.textContent = `$${finalCostMin.toFixed(2)} - $${finalCostMax.toFixed(2)}`;
+        this.elements.timeEstimate.textContent = `${finalTimeMin} - ${finalTimeMax} Sekunden`;
+        
+        // Emit estimation update
+        this.eventBus.emit('config:estimation-updated', {
+            cost: { min: finalCostMin, max: finalCostMax },
+            time: { min: finalTimeMin, max: finalTimeMax }
+        });
+        
+        console.log(`📊 Estimations updated: $${finalCostMin.toFixed(2)}-$${finalCostMax.toFixed(2)}, ${finalTimeMin}-${finalTimeMax}s`);
     }
     
     /**

@@ -69,5 +69,29 @@
         "api_calls_made": 0
       }
     }
+  },
+  "3412b394-ae3f-4fa5-96c2-91c318501597": {
+    "job_id": "3412b394-ae3f-4fa5-96c2-91c318501597",
+    "file_id": "f0551c43-11e1-4d46-8604-7cd471ee52df",
+    "processing_mode": "complete",
+    "options": {
+      "categories": [
+        "grammar",
+        "style"
+      ],
+      "output_filename": null
+    },
+    "status": "failed",
+    "progress": {
+      "current_step": "Failed",
+      "progress_percent": 0,
+      "estimated_remaining_seconds": null
+    },
+    "estimated_time_seconds": 120,
+    "created_at": "2025-07-26T13:01:46.317601",
+    "started_at": "2025-07-26T13:04:07.359714",
+    "completed_at": "2025-07-26T13:04:07.468278",
+    "elapsed_time_seconds": 0.108564,
+    "error_message": "Processing failed: Complete advanced processing failed - check logs for details"
   }
 }
