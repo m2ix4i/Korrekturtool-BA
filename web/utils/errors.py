@@ -20,7 +20,7 @@ class ProcessingError(Exception):
     pass
 
 
-def create_error_response(error_type: str, message: str, status_code: int):
+def create_error_response(error_type: str, message: str, status_code: int, details=None):
     """
     Create standardized error response
     
@@ -28,11 +28,17 @@ def create_error_response(error_type: str, message: str, status_code: int):
         error_type: Type of error (e.g., 'Not found', 'Internal server error')
         message: Human-readable error message
         status_code: HTTP status code
+        details: Optional additional details for debugging (dict or None)
         
     Returns:
         Tuple of (JSON response, status code)
     """
-    return jsonify({
+    response_data = {
         'error': error_type,
         'message': message
-    }), status_code
+    }
+    
+    if details:
+        response_data['details'] = details
+    
+    return jsonify(response_data), status_code

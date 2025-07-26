@@ -11,8 +11,8 @@ class APIConfig:
     API_DESCRIPTION = 'Web API for automated German thesis correction with AI analysis'
     
     ENDPOINTS = {
-        'health': '/health',
         'info': '/api/v1/info',
+        'health': '/api/v1/health',
         'upload': '/api/v1/upload',
         'upload_info': '/api/v1/upload/info',
         'upload_cleanup': '/api/v1/upload/{file_id}/cleanup',
