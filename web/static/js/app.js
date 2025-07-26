@@ -1,0 +1,474 @@
+/**
+ * Main Application Controller
+ * Korrekturtool für Wissenschaftliche Arbeiten
+ * Modern modular architecture with ES6 modules
+ */
+
+// Import core modules
+import { ThemeManager } from './modules/theme-manager.js';
+import { EventBus } from './utils/event-bus.js';
+
+/**
+ * Main Application Class
+ * Orchestrates all application modules and components
+ */
+class KorrekturtoolApp {
+    constructor() {
+        this.version = '2.0.0';
+        this.initialized = false;
+        
+        // Core system components
+        this.eventBus = new EventBus();
+        this.themeManager = null;
+        
+        // Application state
+        this.state = {
+            currentFileId: null,
+            currentJobId: null,
+            isProcessing: false,
+            lastError: null
+        };
+        
+        // DOM elements cache
+        this.elements = {};
+        
+        // Performance monitoring
+        this.performanceMetrics = {
+            initStart: performance.now(),
+            initEnd: null,
+            loadTime: null
+        };
+        
+        console.log(`🚀 Korrekturtool App v${this.version} initializing...`);
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
+        }
+    }
+    
+    /**
+     * Initialize the application
+     */
+    async init() {
+        try {
+            console.log('🔄 Initializing application components...');
+            
+            // Cache DOM elements
+            this.cacheElements();
+            
+            // Initialize core modules
+            await this.initializeModules();
+            
+            // Setup global event listeners
+            this.setupGlobalEventListeners();
+            
+            // Setup error handling
+            this.setupErrorHandling();
+            
+            // Initialize component visibility
+            this.initializeComponentVisibility();
+            
+            // Performance monitoring
+            this.performanceMetrics.initEnd = performance.now();
+            this.performanceMetrics.loadTime = this.performanceMetrics.initEnd - this.performanceMetrics.initStart;
+            
+            this.initialized = true;
+            
+            console.log(`✅ Application initialized in ${Math.round(this.performanceMetrics.loadTime)}ms`);
+            
+            // Emit initialization complete event
+            this.eventBus.emit('app:initialized', {
+                version: this.version,
+                loadTime: this.performanceMetrics.loadTime
+            });
+            
+            // Test API connectivity
+            this.testAPIConnectivity();
+            
+        } catch (error) {
+            console.error('❌ Application initialization failed:', error);
+            this.handleInitializationError(error);
+        }
+    }
+    
+    /**
+     * Cache DOM elements for performance
+     */
+    cacheElements() {
+        // Main sections
+        this.elements.uploadArea = document.getElementById('uploadArea');
+        this.elements.fileInput = document.getElementById('fileInput');
+        this.elements.configSection = document.getElementById('configSection');
+        this.elements.progressSection = document.getElementById('progressSection');
+        this.elements.resultsSection = document.getElementById('resultsSection');
+        
+        // Form elements
+        this.elements.processingForm = document.getElementById('processingForm');
+        this.elements.processingMode = document.getElementById('processingMode');
+        this.elements.analysisCategories = document.getElementById('analysisCategories');
+        this.elements.outputFilename = document.getElementById('outputFilename');
+        this.elements.startProcessing = document.getElementById('startProcessing');
+        this.elements.cancelUpload = document.getElementById('cancelUpload');
+        
+        // Progress elements
+        this.elements.progressFill = document.getElementById('progressFill');
+        this.elements.progressText = document.getElementById('progressText');
+        this.elements.statusBadge = document.getElementById('statusBadge');
+        
+        // Result elements
+        this.elements.resultsList = document.getElementById('resultsList');
+        
+        // Message containers
+        this.elements.errorContainer = document.getElementById('errorContainer');
+        this.elements.successContainer = document.getElementById('successContainer');
+        this.elements.ariaLivePolite = document.getElementById('ariaLivePolite');
+        this.elements.ariaLiveAssertive = document.getElementById('ariaLiveAssertive');
+        
+        console.log('📦 DOM elements cached');
+    }
+    
+    /**
+     * Initialize core modules
+     */
+    async initializeModules() {
+        // Initialize theme manager
+        this.themeManager = new ThemeManager();
+        
+        // Listen for theme changes
+        this.themeManager.onThemeChange((event) => {
+            this.eventBus.emit('theme:changed', event.detail);
+        });
+        
+        console.log('🧩 Core modules initialized');
+    }
+    
+    /**
+     * Setup global event listeners
+     */
+    setupGlobalEventListeners() {
+        // File upload event listeners (basic setup for Phase 1)
+        if (this.elements.uploadArea) {
+            this.elements.uploadArea.addEventListener('click', () => {
+                if (this.elements.fileInput) {
+                    this.elements.fileInput.click();
+                }
+            });
+            
+            // Keyboard accessibility for upload area
+            this.elements.uploadArea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (this.elements.fileInput) {
+                        this.elements.fileInput.click();
+                    }
+                }
+            });
+            
+            // Drag and drop events (placeholder for Phase 2)
+            this.elements.uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                this.elements.uploadArea.classList.add('dragover');
+            });
+            
+            this.elements.uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                this.elements.uploadArea.classList.remove('dragover');
+            });
+            
+            this.elements.uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                this.elements.uploadArea.classList.remove('dragover');
+                // File handling will be implemented in Phase 2
+                console.log('📁 File drop detected (handler to be implemented)');
+            });
+        }
+        
+        // Form submission (placeholder for Phase 2)
+        if (this.elements.processingForm) {
+            this.elements.processingForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log('📝 Form submission detected (handler to be implemented)');
+            });
+        }
+        
+        // Cancel button
+        if (this.elements.cancelUpload) {
+            this.elements.cancelUpload.addEventListener('click', () => {
+                this.resetApplication();
+            });
+        }
+        
+        // Window events
+        window.addEventListener('beforeunload', (e) => {
+            if (this.state.isProcessing) {
+                e.preventDefault();
+                e.returnValue = 'Eine Verarbeitung läuft noch. Möchten Sie wirklich die Seite verlassen?';
+                return e.returnValue;
+            }
+        });
+        
+        console.log('👂 Global event listeners setup complete');
+    }
+    
+    /**
+     * Setup error handling
+     */
+    setupErrorHandling() {
+        // Global error handler
+        window.addEventListener('error', (e) => {
+            console.error('🚨 Global error:', e.error);
+            this.handleError(e.error, 'Ein unerwarteter Fehler ist aufgetreten');
+        });
+        
+        // Promise rejection handler
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('🚨 Unhandled promise rejection:', e.reason);
+            this.handleError(e.reason, 'Ein Fehler bei der Verarbeitung ist aufgetreten');
+        });
+        
+        console.log('🛡️ Error handling setup complete');
+    }
+    
+    /**
+     * Initialize component visibility
+     */
+    initializeComponentVisibility() {
+        // Hide all sections except upload
+        const sections = [
+            this.elements.configSection,
+            this.elements.progressSection,
+            this.elements.resultsSection
+        ];
+        
+        sections.forEach(section => {
+            if (section) {
+                section.classList.remove('active');
+            }
+        });
+        
+        console.log('👁️ Component visibility initialized');
+    }
+    
+    /**
+     * Test API connectivity
+     */
+    async testAPIConnectivity() {
+        try {
+            console.log('🔍 Testing API connectivity...');
+            
+            const response = await fetch('/api/v1/info', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ API Connection successful:', data);
+                this.eventBus.emit('api:connected', data);
+            } else {
+                throw new Error(`API responded with status ${response.status}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ API Connection failed:', error);
+            this.handleError(error, 'Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie es später erneut.');
+            this.eventBus.emit('api:connection-failed', error);
+        }
+    }
+    
+    /**
+     * Handle application errors
+     * @param {Error} error - Error object
+     * @param {string} userMessage - User-friendly message
+     */
+    handleError(error, userMessage) {
+        this.state.lastError = error;
+        
+        // Log detailed error for debugging
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Show user-friendly error message
+        this.showErrorMessage(userMessage);
+        
+        // Emit error event
+        this.eventBus.emit('app:error', {
+            error,
+            userMessage,
+            timestamp: Date.now()
+        });
+    }
+    
+    /**
+     * Handle initialization errors
+     * @param {Error} error - Initialization error
+     */
+    handleInitializationError(error) {
+        // Show critical error message
+        const errorHTML = `
+            <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif; color: #721c24; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; margin: 20px;">
+                <h2>🚨 Initialisierungsfehler</h2>
+                <p>Die Anwendung konnte nicht vollständig geladen werden.</p>
+                <p><strong>Fehler:</strong> ${error.message}</p>
+                <button onclick="window.location.reload()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 15px;">
+                    🔄 Seite neu laden
+                </button>
+            </div>
+        `;
+        
+        document.body.innerHTML = errorHTML;
+    }
+    
+    /**
+     * Show error message to user
+     * @param {string} message - Error message
+     */
+    showErrorMessage(message) {
+        if (this.elements.errorContainer) {
+            this.elements.errorContainer.textContent = message;
+            this.elements.errorContainer.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                this.elements.errorContainer.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Also announce to screen readers
+        if (this.elements.ariaLiveAssertive) {
+            this.elements.ariaLiveAssertive.textContent = `Fehler: ${message}`;
+        }
+        
+        console.log('📢 Error message shown to user');
+    }
+    
+    /**
+     * Show success message to user
+     * @param {string} message - Success message
+     */
+    showSuccessMessage(message) {
+        if (this.elements.successContainer) {
+            this.elements.successContainer.textContent = message;
+            this.elements.successContainer.style.display = 'block';
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                this.elements.successContainer.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Also announce to screen readers
+        if (this.elements.ariaLivePolite) {
+            this.elements.ariaLivePolite.textContent = message;
+        }
+        
+        console.log('📢 Success message shown to user');
+    }
+    
+    /**
+     * Reset application to initial state
+     */
+    resetApplication() {
+        console.log('🔄 Resetting application...');
+        
+        // Reset state
+        this.state.currentFileId = null;
+        this.state.currentJobId = null;
+        this.state.isProcessing = false;
+        this.state.lastError = null;
+        
+        // Reset form
+        if (this.elements.processingForm) {
+            this.elements.processingForm.reset();
+        }
+        
+        // Reset file input
+        if (this.elements.fileInput) {
+            this.elements.fileInput.value = '';
+        }
+        
+        // Hide sections
+        this.initializeComponentVisibility();
+        
+        // Clear messages
+        if (this.elements.errorContainer) {
+            this.elements.errorContainer.style.display = 'none';
+        }
+        if (this.elements.successContainer) {
+            this.elements.successContainer.style.display = 'none';
+        }
+        
+        // Reset upload area
+        if (this.elements.uploadArea) {
+            this.elements.uploadArea.classList.remove('disabled', 'dragover');
+            const uploadText = this.elements.uploadArea.querySelector('.upload-text');
+            const uploadSubtext = this.elements.uploadArea.querySelector('.upload-subtext');
+            
+            if (uploadText) {
+                uploadText.textContent = 'DOCX-Datei hier ablegen oder klicken zum Auswählen';
+            }
+            if (uploadSubtext) {
+                uploadSubtext.textContent = 'Unterstützt werden Word-Dokumente bis 50 MB';
+            }
+        }
+        
+        // Emit reset event
+        this.eventBus.emit('app:reset');
+        
+        console.log('✅ Application reset complete');
+    }
+    
+    /**
+     * Get application state
+     * @returns {Object} Current application state
+     */
+    getState() {
+        return {
+            ...this.state,
+            initialized: this.initialized,
+            theme: this.themeManager ? this.themeManager.getThemeInfo() : null,
+            version: this.version,
+            performanceMetrics: this.performanceMetrics
+        };
+    }
+    
+    /**
+     * Destroy the application (cleanup)
+     */
+    destroy() {
+        console.log('🧹 Destroying application...');
+        
+        // Destroy modules
+        if (this.themeManager) {
+            this.themeManager.destroy();
+        }
+        
+        if (this.eventBus) {
+            this.eventBus.destroy();
+        }
+        
+        // Clear cached elements
+        this.elements = {};
+        
+        console.log('💀 Application destroyed');
+    }
+}
+
+// Initialize application when this module loads
+const app = new KorrekturtoolApp();
+
+// Make app available globally for debugging
+if (typeof window !== 'undefined') {
+    window.KorrekturtoolApp = app;
+}
+
+// Export for potential module use
+export default app;
