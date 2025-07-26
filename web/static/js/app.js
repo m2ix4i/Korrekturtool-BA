@@ -11,6 +11,7 @@ import { UploadHandler } from './handlers/upload-handler.js';
 import { ConfigManager } from './modules/config-manager.js';
 import { WebSocketManager } from './modules/websocket-manager.js';
 import { ProgressManager } from './modules/progress-manager.js';
+import { ResultsManager } from './modules/results-manager.js';
 
 /**
  * Main Application Class
@@ -28,6 +29,7 @@ class KorrekturtoolApp {
         this.configManager = null;
         this.webSocketManager = null;
         this.progressManager = null;
+        this.resultsManager = null;
         
         // Application state
         this.state = {
@@ -204,6 +206,10 @@ class KorrekturtoolApp {
         this.progressManager = new ProgressManager(this.eventBus);
         this.progressManager.init();
         
+        // Initialize results manager
+        this.resultsManager = new ResultsManager(this.eventBus);
+        this.resultsManager.init();
+        
         // Listen for theme changes
         this.themeManager.onThemeChange((event) => {
             this.eventBus.emit('theme:changed', event.detail);
@@ -214,6 +220,9 @@ class KorrekturtoolApp {
         
         // Listen for configuration events
         this.setupConfigEventListeners();
+        
+        // Listen for results events
+        this.setupResultsEventListeners();
         
         console.log('🧩 Core modules initialized');
     }
@@ -261,6 +270,37 @@ class KorrekturtoolApp {
         
         this.eventBus.on('config:saved', (config) => {
             console.log('💾 Configuration saved to localStorage');
+        });
+    }
+    
+    /**
+     * Setup results-related event listeners
+     */
+    setupResultsEventListeners() {
+        this.eventBus.on('results:retry-processing', (data) => {
+            console.log('🔄 Retry processing requested:', data);
+            // Reset form and restart processing
+            this.resetApplicationForRetry();
+        });
+        
+        this.eventBus.on('results:new-upload-requested', (data) => {
+            console.log('📄 New upload requested:', data);
+            // Reset entire application
+            this.resetApplication();
+        });
+        
+        this.eventBus.on('results:displayed', (data) => {
+            console.log('📊 Results displayed:', data);
+            // Hide progress section when results are shown
+            this.hideProgressSection();
+        });
+        
+        this.eventBus.on('results:download-attempted', (data) => {
+            console.log('📥 Download attempted:', data);
+        });
+        
+        this.eventBus.on('results:download-error', (data) => {
+            console.error('❌ Download error:', data);
         });
     }
     
@@ -657,6 +697,19 @@ class KorrekturtoolApp {
                 this.progressManager.updateStatus('Demo abgeschlossen', 'completed');
                 this.showSuccessMessage('Statische Progress-Demo abgeschlossen!');
                 this.state.isProcessing = false;
+                
+                // Emit completion event to trigger ResultsManager
+                this.eventBus.emit('progress:completed', {
+                    jobId: demoJobId,
+                    processingTime: '58 Sekunden',
+                    success: true,
+                    resultData: {
+                        total_suggestions: 23,
+                        categories_processed: ['grammar', 'style', 'clarity', 'academic'],
+                        file_size_mb: 2.4,
+                        download_url: '/api/v1/download/demo-file'
+                    }
+                });
             }
         }, 2000);
     }
@@ -679,6 +732,54 @@ class KorrekturtoolApp {
     }
     
     /**
+     * Hide progress section when results are displayed
+     */
+    hideProgressSection() {
+        if (this.elements.progressSection) {
+            this.elements.progressSection.classList.remove('active');
+            console.log('📊 Progress section hidden');
+        }
+    }
+    
+    /**
+     * Reset application for retry processing (keeps file uploaded)
+     */
+    resetApplicationForRetry() {
+        console.log('🔄 Resetting application for retry...');
+        
+        // Stop progress tracking
+        if (this.progressManager && this.progressManager.isTracking) {
+            this.progressManager.stopTracking();
+            this.progressManager.resetProgress();
+        }
+        
+        // Clear results but keep file uploaded
+        if (this.resultsManager) {
+            this.resultsManager.clearResults();
+        }
+        
+        // Reset processing state but keep file
+        this.state.currentJobId = null;
+        this.state.isProcessing = false;
+        this.state.lastError = null;
+        
+        // Show configuration section for retry
+        if (this.elements.configSection) {
+            this.elements.configSection.classList.add('active');
+        }
+        
+        // Clear messages
+        if (this.elements.errorContainer) {
+            this.elements.errorContainer.style.display = 'none';
+        }
+        if (this.elements.successContainer) {
+            this.elements.successContainer.style.display = 'none';
+        }
+        
+        console.log('✅ Application reset for retry complete');
+    }
+    
+    /**
      * Reset application to initial state
      */
     resetApplication() {
@@ -696,6 +797,11 @@ class KorrekturtoolApp {
         if (this.progressManager && this.progressManager.isTracking) {
             this.progressManager.stopTracking();
             this.progressManager.resetProgress();
+        }
+        
+        // Clear results
+        if (this.resultsManager) {
+            this.resultsManager.clearResults();
         }
         
         // Reset state
@@ -768,6 +874,10 @@ class KorrekturtoolApp {
         
         if (this.configManager) {
             this.configManager.destroy();
+        }
+        
+        if (this.resultsManager) {
+            this.resultsManager.destroy();
         }
         
         if (this.eventBus) {
