@@ -9,6 +9,8 @@ import { ThemeManager } from './modules/theme-manager.js';
 import { EventBus } from './utils/event-bus.js';
 import { UploadHandler } from './handlers/upload-handler.js';
 import { ConfigManager } from './modules/config-manager.js';
+import { WebSocketManager } from './modules/websocket-manager.js';
+import { ProgressManager } from './modules/progress-manager.js';
 
 /**
  * Main Application Class
@@ -24,6 +26,8 @@ class KorrekturtoolApp {
         this.themeManager = null;
         this.uploadHandler = null;
         this.configManager = null;
+        this.webSocketManager = null;
+        this.progressManager = null;
         
         // Application state
         this.state = {
@@ -192,6 +196,13 @@ class KorrekturtoolApp {
         // Initialize configuration manager
         this.configManager = new ConfigManager(this.eventBus);
         await this.configManager.init();
+        
+        // Initialize WebSocket manager
+        this.webSocketManager = new WebSocketManager(this.eventBus);
+        
+        // Initialize progress manager
+        this.progressManager = new ProgressManager(this.eventBus);
+        this.progressManager.init();
         
         // Listen for theme changes
         this.themeManager.onThemeChange((event) => {
@@ -464,8 +475,8 @@ class KorrekturtoolApp {
             const config = this.configManager.exportForProcessing();
             console.log('⚙️ Configuration for processing:', config);
             
-            // TODO: Implement actual processing logic
-            this.showSuccessMessage('Konfiguration validiert! Verarbeitung würde hier starten...');
+            // Start WebSocket progress tracking demonstration
+            await this.startWebSocketProgressDemo(config);
             
             // Emit form submission event with configuration
             this.eventBus.emit('form:submitted', {
@@ -480,10 +491,212 @@ class KorrekturtoolApp {
     }
     
     /**
+     * Start WebSocket progress tracking demonstration
+     * This method demonstrates the real-time progress tracking functionality
+     * In production, this would be triggered after successful API job creation
+     * @param {Object} config - Configuration from config manager
+     */
+    async startWebSocketProgressDemo(config) {
+        try {
+            console.log('🚀 Starting WebSocket progress tracking demo...');
+            
+            // Generate a demo job ID
+            const demoJobId = 'demo-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            this.state.currentJobId = demoJobId;
+            this.state.isProcessing = true;
+            
+            // Show progress section
+            this.showProgressSection();
+            
+            // Connect to WebSocket if not already connected
+            if (!this.webSocketManager.isConnected()) {
+                console.log('🔌 Connecting to WebSocket...');
+                await this.webSocketManager.connect();
+            }
+            
+            // Join job room for demo
+            await this.webSocketManager.joinJob(demoJobId);
+            
+            // Start progress tracking
+            this.progressManager.startTracking(demoJobId);
+            
+            // Simulate WebSocket progress events for demonstration
+            this.simulateProgressEvents(demoJobId, config);
+            
+            this.showSuccessMessage('WebSocket Verbindung hergestellt! Fortschritt wird live angezeigt.');
+            
+        } catch (error) {
+            console.error('❌ WebSocket demo failed:', error);
+            this.handleError(error, 'WebSocket Verbindung fehlgeschlagen. Fallback zu statischen Updates.');
+            
+            // Fallback to static progress simulation
+            this.simulateStaticProgress(config);
+        }
+    }
+    
+    /**
+     * Simulate WebSocket progress events for demonstration
+     * This shows how real progress events would be handled
+     * @param {string} jobId - Demo job ID
+     * @param {Object} config - Processing configuration
+     */
+    simulateProgressEvents(jobId, config) {
+        console.log('📊 Simulating WebSocket progress events...');
+        
+        // Simulate job started event
+        setTimeout(() => {
+            this.eventBus.emit('websocket:job-started', {
+                job_id: jobId,
+                stages: ['parsing', 'analyzing', 'commenting', 'integrating'],
+                estimated_duration: 60, // 60 seconds
+                timestamp: new Date().toISOString()
+            });
+        }, 1000);
+        
+        // Simulate progress updates
+        const progressUpdates = [
+            { stage: 'parsing', progress: 10, message: 'Dokument wird analysiert...', delay: 3000 },
+            { stage: 'parsing', progress: 25, message: 'Textstruktur wird erfasst...', delay: 6000 },
+            { stage: 'analyzing', progress: 40, message: 'KI-Analyse läuft...', delay: 12000 },
+            { stage: 'analyzing', progress: 60, message: 'Grammatik wird geprüft...', delay: 18000 },
+            { stage: 'commenting', progress: 75, message: 'Verbesserungsvorschläge werden generiert...', delay: 24000 },
+            { stage: 'integrating', progress: 90, message: 'Kommentare werden eingefügt...', delay: 30000 },
+            { stage: 'integrating', progress: 100, message: 'Verarbeitung abgeschlossen!', delay: 35000 }
+        ];
+        
+        progressUpdates.forEach(update => {
+            setTimeout(() => {
+                this.eventBus.emit('websocket:progress-update', {
+                    job_id: jobId,
+                    stage: update.stage,
+                    progress: update.progress,
+                    message: update.message,
+                    estimated_remaining: Math.max(0, 60 - (update.delay / 1000)) + ' Sekunden',
+                    timestamp: new Date().toISOString()
+                });
+            }, update.delay);
+        });
+        
+        // Simulate stage completions
+        setTimeout(() => {
+            this.eventBus.emit('websocket:stage-completed', {
+                job_id: jobId,
+                completed_stage: 'parsing',
+                next_stage: 'analyzing',
+                timestamp: new Date().toISOString()
+            });
+        }, 8000);
+        
+        setTimeout(() => {
+            this.eventBus.emit('websocket:stage-completed', {
+                job_id: jobId,
+                completed_stage: 'analyzing',
+                next_stage: 'commenting',
+                timestamp: new Date().toISOString()
+            });
+        }, 20000);
+        
+        setTimeout(() => {
+            this.eventBus.emit('websocket:stage-completed', {
+                job_id: jobId,
+                completed_stage: 'commenting',
+                next_stage: 'integrating',
+                timestamp: new Date().toISOString()
+            });
+        }, 26000);
+        
+        // Simulate job completion
+        setTimeout(() => {
+            this.eventBus.emit('websocket:job-completed', {
+                job_id: jobId,
+                success: true,
+                processing_time: '37 Sekunden',
+                duration_seconds: 37,
+                timestamp: new Date().toISOString(),
+                download_url: '/api/v1/download/' + jobId.replace('demo-', ''),
+                result_data: {
+                    total_suggestions: 23,
+                    categories_processed: config.categories || ['grammar', 'style', 'clarity', 'academic'],
+                    file_size_mb: 2.4
+                }
+            });
+        }, 37000);
+    }
+    
+    /**
+     * Fallback static progress simulation when WebSocket is unavailable
+     * @param {Object} config - Processing configuration
+     */
+    simulateStaticProgress(config) {
+        console.log('📊 Starting static progress fallback...');
+        
+        // Show progress section
+        this.showProgressSection();
+        
+        // Start basic progress tracking without WebSocket
+        const demoJobId = 'static-demo-' + Date.now();
+        this.progressManager.startTracking(demoJobId);
+        
+        // Simple progress simulation
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            progress = Math.min(100, progress);
+            
+            let message = 'Verarbeitung läuft...';
+            if (progress < 25) message = 'Dokument wird analysiert...';
+            else if (progress < 50) message = 'KI-Analyse läuft...';
+            else if (progress < 75) message = 'Kommentare werden generiert...';
+            else if (progress < 100) message = 'Integration läuft...';
+            else message = 'Verarbeitung abgeschlossen!';
+            
+            this.progressManager.updateProgress(progress, message);
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                this.progressManager.updateStatus('Demo abgeschlossen', 'completed');
+                this.showSuccessMessage('Statische Progress-Demo abgeschlossen!');
+                this.state.isProcessing = false;
+            }
+        }, 2000);
+    }
+    
+    /**
+     * Show progress section and hide configuration section
+     */
+    showProgressSection() {
+        // Hide configuration section
+        if (this.elements.configSection) {
+            this.elements.configSection.classList.remove('active');
+        }
+        
+        // Show progress section
+        if (this.elements.progressSection) {
+            this.elements.progressSection.classList.add('active');
+        }
+        
+        console.log('📊 Progress section shown');
+    }
+    
+    /**
      * Reset application to initial state
      */
     resetApplication() {
         console.log('🔄 Resetting application...');
+        
+        // Stop WebSocket tracking and disconnect if connected
+        if (this.webSocketManager && this.webSocketManager.isConnected()) {
+            if (this.state.currentJobId) {
+                this.webSocketManager.leaveJob(this.state.currentJobId);
+            }
+            // Note: We don't disconnect WebSocket completely to allow reconnection
+        }
+        
+        // Stop progress tracking
+        if (this.progressManager && this.progressManager.isTracking) {
+            this.progressManager.stopTracking();
+            this.progressManager.resetProgress();
+        }
         
         // Reset state
         this.state.currentFileId = null;

@@ -252,9 +252,42 @@
                      aria-valuemax="100"
                      aria-labelledby="progress-text">
                     <div class="progress-fill" id="progressFill"></div>
+                    <div class="progress-percentage" id="progressPercentage">0%</div>
                 </div>
                 
                 <div class="progress-text" id="progressText">Initialisierung...</div>
+                
+                <!-- Processing Phases -->
+                <div class="progress-phases" id="progressPhases">
+                    <span class="phase" id="phaseUpload" data-phase="parsing">
+                        <span class="phase-icon">📄</span>
+                        <span class="phase-label">Upload</span>
+                    </span>
+                    <span class="phase" id="phaseAnalysis" data-phase="analyzing">
+                        <span class="phase-icon">🤖</span>
+                        <span class="phase-label">KI-Analyse</span>
+                    </span>
+                    <span class="phase" id="phaseComments" data-phase="commenting">
+                        <span class="phase-icon">💬</span>
+                        <span class="phase-label">Kommentare</span>
+                    </span>
+                    <span class="phase" id="phaseIntegration" data-phase="integrating">
+                        <span class="phase-icon">📝</span>
+                        <span class="phase-label">Integration</span>
+                    </span>
+                </div>
+                
+                <!-- Progress Timing Information -->
+                <div class="progress-timing" id="progressTiming">
+                    <div class="timing-item">
+                        <span class="timing-label">Geschätzte Zeit:</span>
+                        <span class="timing-value" id="estimatedTime">--</span>
+                    </div>
+                    <div class="timing-item">
+                        <span class="timing-label">Verstrichene Zeit:</span>
+                        <span class="timing-value" id="elapsedTime">0s</span>
+                    </div>
+                </div>
                 
                 <div class="progress-status">
                     <span class="status-badge processing" 
@@ -320,6 +353,11 @@
          aria-live="assertive" 
          aria-atomic="true" 
          class="visually-hidden"></div>
+    
+    <!-- Socket.IO Client Library - Required for WebSocket functionality -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" 
+            integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" 
+            crossorigin="anonymous"></script>
     
     <!-- JavaScript Modules - Load at end for performance -->
     <script type="module" src="/static/js/app.js"></script>
