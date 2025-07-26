@@ -6,19 +6,20 @@ from flask import Blueprint, jsonify, request, send_file
 from web.utils.api_config import APIConfig
 from web.api.upload import upload_file, get_upload_info, cleanup_upload
 from web.api.processor import process_document, get_processing_status, download_result
+from web.api.health import get_health_status, get_basic_info
 
 # Create API blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 
 @api_bp.route('/info')
 def api_info():
-    """API information endpoint"""
-    return jsonify({
-        'name': APIConfig.API_NAME,
-        'version': APIConfig.API_VERSION,
-        'description': APIConfig.API_DESCRIPTION,
-        'endpoints': APIConfig.ENDPOINTS
-    })
+    """Enhanced API information endpoint with health summary"""
+    return get_basic_info()
+
+@api_bp.route('/health')
+def health_check():
+    """Comprehensive health check endpoint for localhost environment validation"""
+    return get_health_status()
 
 # File upload endpoints
 @api_bp.route('/upload', methods=['POST'])
