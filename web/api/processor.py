@@ -164,21 +164,53 @@ def get_processing_status(job_id: str):
 
 def download_result(file_id: str):
     """
-    Download processed file
+    Download processed file with enhanced security validation
     
     GET /api/v1/download/{file_id}
     """
     try:
-        # Find output file
-        output_dir = Path(current_app.config.get('OUTPUT_FOLDER', 'outputs'))
-        file_path = output_dir / f"{file_id}.docx"
+        from web.utils.secure_file_handler import create_secure_handler, validate_download_access
         
-        if not file_path.exists():
+        # Validate file ID format (should be UUID)
+        try:
+            import uuid
+            uuid.UUID(file_id)
+        except ValueError:
+            logger.warning(f"Invalid file ID format: {file_id}")
+            return APIErrorBuilder.validation_error("Invalid file ID format")
+        
+        # Create secure file handler for outputs
+        secure_handler = create_secure_handler('outputs')
+        
+        # Construct file path
+        file_path = secure_handler.base_directory / f"{file_id}.docx"
+        
+        # Validate file access with security checks
+        if not validate_download_access(file_id):
+            logger.warning(f"Unauthorized download attempt for file: {file_id}")
+            return APIErrorBuilder.not_found_error(
+                "File not found or access denied."
+            )
+        
+        # Additional security validation
+        if not secure_handler.verify_file_access(str(file_path)):
+            logger.warning(f"Security validation failed for file: {file_id}")
+            return APIErrorBuilder.not_found_error(
+                "File not found or access denied."
+            )
+        
+        # Get file info for additional validation
+        file_info = secure_handler.get_file_info(str(file_path))
+        if not file_info:
+            logger.warning(f"Could not get file info for: {file_id}")
             return APIErrorBuilder.not_found_error(
                 "File not found. It may have been processed too long ago and cleaned up."
             )
         
-        # Send file
+        # Log download attempt for audit
+        logger.info(f"Secure file download: {file_id} (size: {file_info['size']} bytes, hash: {file_info['sha256'][:16]}...)")
+        
+        # Send file securely
         return send_file(
             str(file_path),
             as_attachment=True,
@@ -223,6 +255,8 @@ def _estimate_processing_time(processing_mode: str, categories: list) -> int:
 def init_processor(app):
     """Initialize the background processor with the Flask app"""
     with app.app_context():
+        # Set Flask app in background processor for context management
+        background_processor.set_flask_app(app)
         # Start the background processor
         background_processor.start()
         logger.info("Background processor started for Flask app")

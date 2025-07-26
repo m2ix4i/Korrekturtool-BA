@@ -18,7 +18,7 @@ from web.config import TestingConfig
 @pytest.fixture
 def app():
     """Create application for testing"""
-    app = create_app(TestingConfig)
+    app, socketio = create_app(TestingConfig)
     return app
 
 @pytest.fixture

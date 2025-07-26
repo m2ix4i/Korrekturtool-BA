@@ -46,7 +46,7 @@ def create_test_docx():
 
 def test_processing_pipeline():
     """Test the complete processing pipeline"""
-    base_url = "http://localhost:5000/api/v1"
+    base_url = "http://localhost:5003/api/v1"
     
     print("Testing Processing Pipeline")
     print("=" * 50)
