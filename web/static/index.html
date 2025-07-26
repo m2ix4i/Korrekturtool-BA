@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="/static/css/components.css">
     <link rel="stylesheet" href="/static/css/themes.css">
     <link rel="stylesheet" href="/static/css/responsive.css">
+    <link rel="stylesheet" href="/static/css/config.css">
     
     <!-- Preload critical resources -->
     <link rel="preconnect" href="/api/v1">
@@ -80,54 +81,140 @@
                 <h2 id="config-heading">⚙️ Verarbeitungsoptionen</h2>
                 
                 <form id="processingForm" novalidate>
-                    <div class="config-row">
-                        <label for="processingMode" class="required">
-                            Verarbeitungsmodus:
-                            <span class="visually-hidden">(Erforderlich)</span>
-                        </label>
-                        <select id="processingMode" 
-                                name="processing_mode"
-                                required
-                                aria-describedby="processing-mode-help">
-                            <option value="complete">Vollständig (empfohlen)</option>
-                            <option value="performance">Leistungsoptimiert</option>
-                        </select>
-                        <div id="processing-mode-help" class="visually-hidden">
-                            Vollständig bietet umfassende Analyse, Leistungsoptimiert ist schneller
+                    <!-- Processing Mode Selection (Radio Buttons) -->
+                    <div class="config-group">
+                        <fieldset class="config-fieldset">
+                            <legend class="config-legend required">
+                                Verarbeitungsmodus:
+                                <span class="tooltip-trigger" data-tooltip="Wählen Sie den passenden Modus für Ihr Dokument">ℹ️</span>
+                            </legend>
+                            
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" id="modeComplete" name="processing_mode" value="complete" checked required>
+                                    <label for="modeComplete" class="radio-label">
+                                        <span class="radio-title">🎯 Vollständig (empfohlen)</span>
+                                        <span class="radio-description">Umfassende Analyse aller Kategorien mit detaillierten Kommentaren</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="radio-option">
+                                    <input type="radio" id="modePerformance" name="processing_mode" value="performance">
+                                    <label for="modePerformance" class="radio-label">
+                                        <span class="radio-title">⚡ Leistungsoptimiert</span>
+                                        <span class="radio-description">Schnellere Verarbeitung für große Dokumente mit fokussierten Kommentaren</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    
+                    <!-- Analysis Categories (Checkboxes) -->
+                    <div class="config-group">
+                        <fieldset class="config-fieldset">
+                            <legend class="config-legend">
+                                Analysekategorien:
+                                <span class="tooltip-trigger" data-tooltip="Wählen Sie die gewünschten Analysebereiche">ℹ️</span>
+                            </legend>
+                            
+                            <div class="checkbox-group">
+                                <div class="checkbox-option">
+                                    <input type="checkbox" id="categoryGrammar" name="categories" value="grammar" checked>
+                                    <label for="categoryGrammar" class="checkbox-label">
+                                        <span class="checkbox-title">📝 Grammatik</span>
+                                        <span class="checkbox-description">Rechtschreibung, Zeichensetzung und grammatische Korrektheit</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="checkbox-option">
+                                    <input type="checkbox" id="categoryStyle" name="categories" value="style" checked>
+                                    <label for="categoryStyle" class="checkbox-label">
+                                        <span class="checkbox-title">✨ Stil</span>
+                                        <span class="checkbox-description">Sprachlicher Ausdruck, Wortwahl und Stilverbesserungen</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="checkbox-option">
+                                    <input type="checkbox" id="categoryClarity" name="categories" value="clarity" checked>
+                                    <label for="categoryClarity" class="checkbox-label">
+                                        <span class="checkbox-title">💡 Klarheit</span>
+                                        <span class="checkbox-description">Verständlichkeit, Struktur und logischer Aufbau</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="checkbox-option">
+                                    <input type="checkbox" id="categoryAcademic" name="categories" value="academic" checked>
+                                    <label for="categoryAcademic" class="checkbox-label">
+                                        <span class="checkbox-title">🎓 Wissenschaftlichkeit</span>
+                                        <span class="checkbox-description">Wissenschaftliche Standards, Argumentation und Fachsprache</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    
+                    <!-- Cost and Time Estimation Display -->
+                    <div class="config-group">
+                        <div class="estimation-panel">
+                            <div class="estimation-item">
+                                <span class="estimation-label">💰 Geschätzte Kosten:</span>
+                                <span class="estimation-value" id="costEstimate">$0.25 - $0.75</span>
+                            </div>
+                            <div class="estimation-item">
+                                <span class="estimation-label">⏱️ Geschätzte Dauer:</span>
+                                <span class="estimation-value" id="timeEstimate">30 - 90 Sekunden</span>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="config-row">
-                        <label for="analysisCategories">
-                            Analysekategorien:
-                            <span class="visually-hidden">(Mehrfachauswahl möglich)</span>
-                        </label>
-                        <select id="analysisCategories" 
-                                name="categories"
-                                multiple 
-                                size="4"
-                                aria-describedby="categories-help">
-                            <option value="grammar" selected>Grammatik</option>
-                            <option value="style" selected>Stil</option>
-                            <option value="clarity" selected>Klarheit</option>
-                            <option value="academic" selected>Wissenschaftlichkeit</option>
-                        </select>
-                        <div id="categories-help" class="visually-hidden">
-                            Halten Sie Strg gedrückt, um mehrere Kategorien auszuwählen
+                    <!-- Basic Output Options -->
+                    <div class="config-group">
+                        <div class="config-row">
+                            <label for="outputFilename">
+                                📄 Ausgabedatei (optional):
+                                <span class="tooltip-trigger" data-tooltip="Lassen Sie das Feld leer für automatische Benennung">ℹ️</span>
+                            </label>
+                            <input type="text" 
+                                   id="outputFilename" 
+                                   name="output_filename"
+                                   placeholder="dokument_korrigiert.docx"
+                                   aria-describedby="filename-help" />
+                            <div id="filename-help" class="visually-hidden">
+                                Wenn leer, wird automatisch ein Name generiert
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="config-row">
-                        <label for="outputFilename">
-                            Ausgabedatei (optional):
-                        </label>
-                        <input type="text" 
-                               id="outputFilename" 
-                               name="output_filename"
-                               placeholder="dokument_korrigiert.docx"
-                               aria-describedby="filename-help" />
-                        <div id="filename-help" class="visually-hidden">
-                            Wenn leer, wird automatisch ein Name generiert
+                    <!-- Advanced Options (Collapsible) -->
+                    <div class="config-group">
+                        <button type="button" class="advanced-toggle" id="advancedToggle" aria-expanded="false">
+                            🔧 Erweiterte Optionen
+                            <span class="toggle-icon">▼</span>
+                        </button>
+                        
+                        <div class="advanced-options" id="advancedOptions" aria-hidden="true">
+                            <div class="config-row">
+                                <label for="processingPriority">
+                                    🚀 Verarbeitungspriorität:
+                                    <span class="tooltip-trigger" data-tooltip="Höhere Priorität für schnellere Verarbeitung">ℹ️</span>
+                                </label>
+                                <select id="processingPriority" name="processing_priority">
+                                    <option value="normal">Normal</option>
+                                    <option value="high">Hoch</option>
+                                </select>
+                            </div>
+                            
+                            <div class="config-row">
+                                <label for="commentDensity">
+                                    💬 Kommentardichte:
+                                    <span class="tooltip-trigger" data-tooltip="Bestimmt die Anzahl der Verbesserungsvorschläge">ℹ️</span>
+                                </label>
+                                <select id="commentDensity" name="comment_density">
+                                    <option value="low">Niedrig (nur wichtige Verbesserungen)</option>
+                                    <option value="medium" selected>Mittel (ausgewogen)</option>
+                                    <option value="high">Hoch (detaillierte Analyse)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     

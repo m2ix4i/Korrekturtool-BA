@@ -8,6 +8,7 @@
 import { ThemeManager } from './modules/theme-manager.js';
 import { EventBus } from './utils/event-bus.js';
 import { UploadHandler } from './handlers/upload-handler.js';
+import { ConfigManager } from './modules/config-manager.js';
 
 /**
  * Main Application Class
@@ -22,6 +23,7 @@ class KorrekturtoolApp {
         this.eventBus = new EventBus();
         this.themeManager = null;
         this.uploadHandler = null;
+        this.configManager = null;
         
         // Application state
         this.state = {
@@ -187,6 +189,10 @@ class KorrekturtoolApp {
             this.eventBus
         );
         
+        // Initialize configuration manager
+        this.configManager = new ConfigManager(this.eventBus);
+        await this.configManager.init();
+        
         // Listen for theme changes
         this.themeManager.onThemeChange((event) => {
             this.eventBus.emit('theme:changed', event.detail);
@@ -194,6 +200,9 @@ class KorrekturtoolApp {
         
         // Listen for upload events
         this.setupUploadEventListeners();
+        
+        // Listen for configuration events
+        this.setupConfigEventListeners();
         
         console.log('🧩 Core modules initialized');
     }
@@ -220,16 +229,41 @@ class KorrekturtoolApp {
     }
     
     /**
+     * Setup configuration-related event listeners
+     */
+    setupConfigEventListeners() {
+        this.eventBus.on('config:initialized', (config) => {
+            console.log('⚙️ Configuration initialized:', config);
+        });
+        
+        this.eventBus.on('config:processing-mode-changed', (mode) => {
+            console.log('🔄 Processing mode changed:', mode);
+        });
+        
+        this.eventBus.on('config:categories-changed', (categories) => {
+            console.log('📝 Analysis categories changed:', categories);
+        });
+        
+        this.eventBus.on('config:estimation-updated', (estimation) => {
+            console.log('📊 Cost/time estimation updated:', estimation);
+        });
+        
+        this.eventBus.on('config:saved', (config) => {
+            console.log('💾 Configuration saved to localStorage');
+        });
+    }
+    
+    /**
      * Setup global event listeners
      */
     setupGlobalEventListeners() {
         // Note: Upload handling is now managed by UploadHandler class
         
-        // Form submission (placeholder for Phase 2)
+        // Form submission with enhanced configuration
         if (this.elements.processingForm) {
             this.elements.processingForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                console.log('📝 Form submission detected (handler to be implemented)');
+                this.handleFormSubmission();
             });
         }
         
@@ -413,6 +447,39 @@ class KorrekturtoolApp {
     }
     
     /**
+     * Handle form submission with configuration validation
+     */
+    async handleFormSubmission() {
+        try {
+            console.log('📝 Processing form submission...');
+            
+            // Validate configuration
+            const validation = this.configManager.validateConfig();
+            if (!validation.isValid) {
+                this.showErrorMessage(validation.errors.join(', '));
+                return;
+            }
+            
+            // Get configuration for processing
+            const config = this.configManager.exportForProcessing();
+            console.log('⚙️ Configuration for processing:', config);
+            
+            // TODO: Implement actual processing logic
+            this.showSuccessMessage('Konfiguration validiert! Verarbeitung würde hier starten...');
+            
+            // Emit form submission event with configuration
+            this.eventBus.emit('form:submitted', {
+                config,
+                timestamp: Date.now()
+            });
+            
+        } catch (error) {
+            console.error('❌ Form submission failed:', error);
+            this.handleError(error, 'Fehler beim Verarbeiten der Konfiguration');
+        }
+    }
+    
+    /**
      * Reset application to initial state
      */
     resetApplication() {
@@ -432,6 +499,12 @@ class KorrekturtoolApp {
         // Reset upload handler
         if (this.uploadHandler) {
             this.uploadHandler.reset();
+        }
+        
+        // Reset configuration (but keep saved preferences)
+        if (this.configManager) {
+            this.configManager.applyConfigToForm();
+            this.configManager.updateEstimations();
         }
         
         // Hide sections
@@ -478,6 +551,10 @@ class KorrekturtoolApp {
         
         if (this.uploadHandler) {
             this.uploadHandler.destroy();
+        }
+        
+        if (this.configManager) {
+            this.configManager.destroy();
         }
         
         if (this.eventBus) {
