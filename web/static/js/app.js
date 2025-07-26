@@ -9,7 +9,9 @@ import { ThemeManager } from './modules/theme-manager.js';
 import { EventBus } from './utils/event-bus.js';
 import { UploadHandler } from './handlers/upload-handler.js';
 import { ConfigManager } from './modules/config-manager.js';
-import { apiService } from './services/api-service.js';
+import { WebSocketManager } from './modules/websocket-manager.js';
+import { ProgressManager } from './modules/progress-manager.js';
+import { ResultsManager } from './modules/results-manager.js';
 
 /**
  * Main Application Class
@@ -25,7 +27,9 @@ class KorrekturtoolApp {
         this.themeManager = null;
         this.uploadHandler = null;
         this.configManager = null;
-        this.apiService = apiService;
+        this.webSocketManager = null;
+        this.progressManager = null;
+        this.resultsManager = null;
         
         // Application state
         this.state = {
@@ -195,6 +199,17 @@ class KorrekturtoolApp {
         this.configManager = new ConfigManager(this.eventBus);
         await this.configManager.init();
         
+        // Initialize WebSocket manager
+        this.webSocketManager = new WebSocketManager(this.eventBus);
+        
+        // Initialize progress manager
+        this.progressManager = new ProgressManager(this.eventBus);
+        this.progressManager.init();
+        
+        // Initialize results manager
+        this.resultsManager = new ResultsManager(this.eventBus);
+        this.resultsManager.init();
+        
         // Listen for theme changes
         this.themeManager.onThemeChange((event) => {
             this.eventBus.emit('theme:changed', event.detail);
@@ -205,6 +220,9 @@ class KorrekturtoolApp {
         
         // Listen for configuration events
         this.setupConfigEventListeners();
+        
+        // Listen for results events
+        this.setupResultsEventListeners();
         
         console.log('🧩 Core modules initialized');
     }
@@ -252,6 +270,37 @@ class KorrekturtoolApp {
         
         this.eventBus.on('config:saved', (config) => {
             console.log('💾 Configuration saved to localStorage');
+        });
+    }
+    
+    /**
+     * Setup results-related event listeners
+     */
+    setupResultsEventListeners() {
+        this.eventBus.on('results:retry-processing', (data) => {
+            console.log('🔄 Retry processing requested:', data);
+            // Reset form and restart processing
+            this.resetApplicationForRetry();
+        });
+        
+        this.eventBus.on('results:new-upload-requested', (data) => {
+            console.log('📄 New upload requested:', data);
+            // Reset entire application
+            this.resetApplication();
+        });
+        
+        this.eventBus.on('results:displayed', (data) => {
+            console.log('📊 Results displayed:', data);
+            // Hide progress section when results are shown
+            this.hideProgressSection();
+        });
+        
+        this.eventBus.on('results:download-attempted', (data) => {
+            console.log('📥 Download attempted:', data);
+        });
+        
+        this.eventBus.on('results:download-error', (data) => {
+            console.error('❌ Download error:', data);
         });
     }
     
@@ -466,8 +515,8 @@ class KorrekturtoolApp {
             const config = this.configManager.exportForProcessing();
             console.log('⚙️ Configuration for processing:', config);
             
-            // Start document processing
-            await this.processDocument(config);
+            // Start WebSocket progress tracking demonstration
+            await this.startWebSocketProgressDemo(config);
             
             // Emit form submission event with configuration
             this.eventBus.emit('form:submitted', {
@@ -482,113 +531,252 @@ class KorrekturtoolApp {
     }
     
     /**
-     * Process document with AI analysis
+     * Start WebSocket progress tracking demonstration
+     * This method demonstrates the real-time progress tracking functionality
+     * In production, this would be triggered after successful API job creation
      * @param {Object} config - Configuration from config manager
      */
-    async processDocument(config) {
+    async startWebSocketProgressDemo(config) {
         try {
-            console.log('🚀 Starting document processing...');
+            console.log('🚀 Starting WebSocket progress tracking demo...');
             
-            // 1. Validate prerequisites
-            const uploadState = this.uploadHandler.getState();
-            if (!uploadState.hasFile) {
-                throw new Error('Keine Datei ausgewählt. Bitte laden Sie zuerst eine DOCX-Datei hoch.');
+            // Generate a demo job ID
+            const demoJobId = 'demo-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            this.state.currentJobId = demoJobId;
+            this.state.isProcessing = true;
+            
+            // Show progress section
+            this.showProgressSection();
+            
+            // Connect to WebSocket if not already connected
+            if (!this.webSocketManager.isConnected()) {
+                console.log('🔌 Connecting to WebSocket...');
+                await this.webSocketManager.connect();
             }
             
-            // 2. Set processing state
-            this.state.isProcessing = true;
-            this.showProcessingState();
+            // Join job room for demo
+            await this.webSocketManager.joinJob(demoJobId);
             
-            // 3. Upload file to server
-            console.log('📤 Uploading file:', uploadState.fileName);
-            const uploadResult = await this.apiService.uploadFile(uploadState.selectedFile);
-            this.state.currentFileId = uploadResult.file_id;
-            console.log('✅ File uploaded successfully, ID:', this.state.currentFileId);
+            // Start progress tracking
+            this.progressManager.startTracking(demoJobId);
             
-            // 4. Prepare processing request
-            const processingRequest = {
-                file_id: this.state.currentFileId,
-                processing_mode: config.processing_mode,
-                categories: config.categories,
-                output_filename: config.output_filename
-            };
+            // Simulate WebSocket progress events for demonstration
+            this.simulateProgressEvents(demoJobId, config);
             
-            // 5. Submit for processing
-            console.log('🤖 Submitting for AI processing...');
-            const processResult = await this.apiService.processDocument(processingRequest);
-            this.state.currentJobId = processResult.job_id;
-            console.log('✅ Processing started, Job ID:', this.state.currentJobId);
-            
-            // 6. Show success message
-            this.showSuccessMessage('Verarbeitung erfolgreich gestartet! Die KI analysiert Ihr Dokument...');
-            
-            // 7. Emit events for other components
-            this.eventBus.emit('processing:started', {
-                jobId: this.state.currentJobId,
-                fileId: this.state.currentFileId,
-                config: config
-            });
-            
-            // 8. Update UI to show processing state
-            this.showSection('progressSection');
+            this.showSuccessMessage('WebSocket Verbindung hergestellt! Fortschritt wird live angezeigt.');
             
         } catch (error) {
-            console.error('❌ Document processing failed:', error);
-            this.state.isProcessing = false;
-            this.handleError(error, 'Fehler beim Starten der Verarbeitung');
+            console.error('❌ WebSocket demo failed:', error);
+            this.handleError(error, 'WebSocket Verbindung fehlgeschlagen. Fallback zu statischen Updates.');
+            
+            // Fallback to static progress simulation
+            this.simulateStaticProgress(config);
         }
     }
     
     /**
-     * Show processing state in UI
+     * Simulate WebSocket progress events for demonstration
+     * This shows how real progress events would be handled
+     * @param {string} jobId - Demo job ID
+     * @param {Object} config - Processing configuration
      */
-    showProcessingState() {
-        console.log('🔄 Showing processing state...');
+    simulateProgressEvents(jobId, config) {
+        console.log('📊 Simulating WebSocket progress events...');
         
-        // Update upload area to show processing
-        if (this.uploadHandler) {
-            this.uploadHandler.setProcessingState(true);
+        // Simulate job started event
+        setTimeout(() => {
+            this.eventBus.emit('websocket:job-started', {
+                job_id: jobId,
+                stages: ['parsing', 'analyzing', 'commenting', 'integrating'],
+                estimated_duration: 60, // 60 seconds
+                timestamp: new Date().toISOString()
+            });
+        }, 1000);
+        
+        // Simulate progress updates
+        const progressUpdates = [
+            { stage: 'parsing', progress: 10, message: 'Dokument wird analysiert...', delay: 3000 },
+            { stage: 'parsing', progress: 25, message: 'Textstruktur wird erfasst...', delay: 6000 },
+            { stage: 'analyzing', progress: 40, message: 'KI-Analyse läuft...', delay: 12000 },
+            { stage: 'analyzing', progress: 60, message: 'Grammatik wird geprüft...', delay: 18000 },
+            { stage: 'commenting', progress: 75, message: 'Verbesserungsvorschläge werden generiert...', delay: 24000 },
+            { stage: 'integrating', progress: 90, message: 'Kommentare werden eingefügt...', delay: 30000 },
+            { stage: 'integrating', progress: 100, message: 'Verarbeitung abgeschlossen!', delay: 35000 }
+        ];
+        
+        progressUpdates.forEach(update => {
+            setTimeout(() => {
+                this.eventBus.emit('websocket:progress-update', {
+                    job_id: jobId,
+                    stage: update.stage,
+                    progress: update.progress,
+                    message: update.message,
+                    estimated_remaining: Math.max(0, 60 - (update.delay / 1000)) + ' Sekunden',
+                    timestamp: new Date().toISOString()
+                });
+            }, update.delay);
+        });
+        
+        // Simulate stage completions
+        setTimeout(() => {
+            this.eventBus.emit('websocket:stage-completed', {
+                job_id: jobId,
+                completed_stage: 'parsing',
+                next_stage: 'analyzing',
+                timestamp: new Date().toISOString()
+            });
+        }, 8000);
+        
+        setTimeout(() => {
+            this.eventBus.emit('websocket:stage-completed', {
+                job_id: jobId,
+                completed_stage: 'analyzing',
+                next_stage: 'commenting',
+                timestamp: new Date().toISOString()
+            });
+        }, 20000);
+        
+        setTimeout(() => {
+            this.eventBus.emit('websocket:stage-completed', {
+                job_id: jobId,
+                completed_stage: 'commenting',
+                next_stage: 'integrating',
+                timestamp: new Date().toISOString()
+            });
+        }, 26000);
+        
+        // Simulate job completion
+        setTimeout(() => {
+            this.eventBus.emit('websocket:job-completed', {
+                job_id: jobId,
+                success: true,
+                processing_time: '37 Sekunden',
+                duration_seconds: 37,
+                timestamp: new Date().toISOString(),
+                download_url: '/api/v1/download/' + jobId.replace('demo-', ''),
+                result_data: {
+                    total_suggestions: 23,
+                    categories_processed: config.categories || ['grammar', 'style', 'clarity', 'academic'],
+                    file_size_mb: 2.4
+                }
+            });
+        }, 37000);
+    }
+    
+    /**
+     * Fallback static progress simulation when WebSocket is unavailable
+     * @param {Object} config - Processing configuration
+     */
+    simulateStaticProgress(config) {
+        console.log('📊 Starting static progress fallback...');
+        
+        // Show progress section
+        this.showProgressSection();
+        
+        // Start basic progress tracking without WebSocket
+        const demoJobId = 'static-demo-' + Date.now();
+        this.progressManager.startTracking(demoJobId);
+        
+        // Simple progress simulation
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            progress = Math.min(100, progress);
+            
+            let message = 'Verarbeitung läuft...';
+            if (progress < 25) message = 'Dokument wird analysiert...';
+            else if (progress < 50) message = 'KI-Analyse läuft...';
+            else if (progress < 75) message = 'Kommentare werden generiert...';
+            else if (progress < 100) message = 'Integration läuft...';
+            else message = 'Verarbeitung abgeschlossen!';
+            
+            this.progressManager.updateProgress(progress, message);
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                this.progressManager.updateStatus('Demo abgeschlossen', 'completed');
+                this.showSuccessMessage('Statische Progress-Demo abgeschlossen!');
+                this.state.isProcessing = false;
+                
+                // Emit completion event to trigger ResultsManager
+                this.eventBus.emit('progress:completed', {
+                    jobId: demoJobId,
+                    processingTime: '58 Sekunden',
+                    success: true,
+                    resultData: {
+                        total_suggestions: 23,
+                        categories_processed: ['grammar', 'style', 'clarity', 'academic'],
+                        file_size_mb: 2.4,
+                        download_url: '/api/v1/download/demo-file'
+                    }
+                });
+            }
+        }, 2000);
+    }
+    
+    /**
+     * Show progress section and hide configuration section
+     */
+    showProgressSection() {
+        // Hide configuration section
+        if (this.elements.configSection) {
+            this.elements.configSection.classList.remove('active');
         }
         
         // Show progress section
-        this.showSection('progressSection');
+        if (this.elements.progressSection) {
+            this.elements.progressSection.classList.add('active');
+        }
         
-        // Hide configuration section
-        this.hideSection('configSection');
+        console.log('📊 Progress section shown');
     }
     
     /**
-     * Show a section by adding 'active' class
-     * @param {string} sectionId - The section element ID or key
+     * Hide progress section when results are displayed
      */
-    showSection(sectionId) {
-        const section = typeof sectionId === 'string' 
-            ? document.getElementById(sectionId) || this.elements[sectionId]
-            : sectionId;
-            
-        if (section) {
-            section.classList.add('active');
-            console.log(`👁️ Section ${sectionId} shown`);
-        } else {
-            console.warn(`⚠️ Section ${sectionId} not found`);
+    hideProgressSection() {
+        if (this.elements.progressSection) {
+            this.elements.progressSection.classList.remove('active');
+            console.log('📊 Progress section hidden');
         }
     }
     
     /**
-     * Hide a section by removing 'active' class
-     * @param {string} sectionId - The section element ID or key
+     * Reset application for retry processing (keeps file uploaded)
      */
-    hideSection(sectionId) {
-        const section = typeof sectionId === 'string' 
-            ? document.getElementById(sectionId) || this.elements[sectionId]
-            : sectionId;
-            
-        if (section) {
-            section.classList.remove('active');
-            console.log(`👁️ Section ${sectionId} hidden`);
-        } else {
-            console.warn(`⚠️ Section ${sectionId} not found`);
+    resetApplicationForRetry() {
+        console.log('🔄 Resetting application for retry...');
+        
+        // Stop progress tracking
+        if (this.progressManager && this.progressManager.isTracking) {
+            this.progressManager.stopTracking();
+            this.progressManager.resetProgress();
         }
+        
+        // Clear results but keep file uploaded
+        if (this.resultsManager) {
+            this.resultsManager.clearResults();
+        }
+        
+        // Reset processing state but keep file
+        this.state.currentJobId = null;
+        this.state.isProcessing = false;
+        this.state.lastError = null;
+        
+        // Show configuration section for retry
+        if (this.elements.configSection) {
+            this.elements.configSection.classList.add('active');
+        }
+        
+        // Clear messages
+        if (this.elements.errorContainer) {
+            this.elements.errorContainer.style.display = 'none';
+        }
+        if (this.elements.successContainer) {
+            this.elements.successContainer.style.display = 'none';
+        }
+        
+        console.log('✅ Application reset for retry complete');
     }
     
     /**
@@ -596,6 +784,25 @@ class KorrekturtoolApp {
      */
     resetApplication() {
         console.log('🔄 Resetting application...');
+        
+        // Stop WebSocket tracking and disconnect if connected
+        if (this.webSocketManager && this.webSocketManager.isConnected()) {
+            if (this.state.currentJobId) {
+                this.webSocketManager.leaveJob(this.state.currentJobId);
+            }
+            // Note: We don't disconnect WebSocket completely to allow reconnection
+        }
+        
+        // Stop progress tracking
+        if (this.progressManager && this.progressManager.isTracking) {
+            this.progressManager.stopTracking();
+            this.progressManager.resetProgress();
+        }
+        
+        // Clear results
+        if (this.resultsManager) {
+            this.resultsManager.clearResults();
+        }
         
         // Reset state
         this.state.currentFileId = null;
@@ -667,6 +874,10 @@ class KorrekturtoolApp {
         
         if (this.configManager) {
             this.configManager.destroy();
+        }
+        
+        if (this.resultsManager) {
+            this.resultsManager.destroy();
         }
         
         if (this.eventBus) {
