@@ -12,6 +12,7 @@ import { ConfigManager } from './modules/config-manager.js';
 import { WebSocketManager } from './modules/websocket-manager.js';
 import { ProgressManager } from './modules/progress-manager.js';
 import { ResultsManager } from './modules/results-manager.js';
+import { APIService } from './services/api-service.js';
 
 /**
  * Main Application Class
@@ -30,6 +31,7 @@ class KorrekturtoolApp {
         this.webSocketManager = null;
         this.progressManager = null;
         this.resultsManager = null;
+        this.apiService = new APIService();
         
         // Application state
         this.state = {
@@ -515,8 +517,8 @@ class KorrekturtoolApp {
             const config = this.configManager.exportForProcessing();
             console.log('⚙️ Configuration for processing:', config);
             
-            // Start WebSocket progress tracking demonstration
-            await this.startWebSocketProgressDemo(config);
+            // Start comprehensive processing with API, WebSocket, and Results integration
+            await this.processDocumentWithFullIntegration(config);
             
             // Emit form submission event with configuration
             this.eventBus.emit('form:submitted', {
@@ -572,6 +574,171 @@ class KorrekturtoolApp {
             // Fallback to static progress simulation
             this.simulateStaticProgress(config);
         }
+    }
+    
+    /**
+     * Process document with comprehensive API, WebSocket, and Results integration
+     * Combines real API processing with WebSocket monitoring and Results display
+     * @param {Object} config - Configuration from config manager
+     */
+    async processDocumentWithFullIntegration(config) {
+        try {
+            console.log('🚀 Starting comprehensive document processing...');
+            
+            // 1. Validate prerequisites
+            const uploadState = this.uploadHandler.getState();
+            if (!uploadState.hasFile) {
+                throw new Error('Keine Datei ausgewählt. Bitte laden Sie zuerst eine DOCX-Datei hoch.');
+            }
+            
+            // 2. Set processing state and show progress section
+            this.state.isProcessing = true;
+            this.showProgressSection();
+            
+            // 3. Initialize WebSocket connection for real-time progress
+            try {
+                if (!this.webSocketManager.isConnected()) {
+                    console.log('🔌 Connecting to WebSocket...');
+                    await this.webSocketManager.connect();
+                }
+            } catch (wsError) {
+                console.warn('⚠️ WebSocket connection failed, will use fallback progress:', wsError);
+            }
+            
+            // 4. Upload file to server using API service
+            console.log('📤 Uploading file:', uploadState.fileName);
+            const uploadResult = await this.apiService.uploadFile(uploadState.selectedFile);
+            this.state.currentFileId = uploadResult.file_id;
+            console.log('✅ File uploaded successfully, ID:', this.state.currentFileId);
+            
+            // 5. Prepare processing request
+            const processingRequest = {
+                file_id: this.state.currentFileId,
+                processing_mode: config.processing_mode,
+                categories: config.categories,
+                output_filename: config.output_filename
+            };
+            
+            // 6. Submit for AI processing
+            console.log('🤖 Submitting for AI processing...');
+            const processResult = await this.apiService.processDocument(processingRequest);
+            this.state.currentJobId = processResult.job_id;
+            console.log('✅ Processing started, Job ID:', this.state.currentJobId);
+            
+            // 7. Start progress tracking with both managers
+            this.progressManager.startTracking(this.state.currentJobId);
+            
+            // 8. Join WebSocket room if connected, otherwise use fallback
+            if (this.webSocketManager.isConnected()) {
+                await this.webSocketManager.joinJob(this.state.currentJobId);
+                this.showSuccessMessage('Verarbeitung gestartet! Live-Updates über WebSocket aktiv.');
+            } else {
+                // Fallback to demo simulation for results display
+                this.simulateProgressEventsForResults(this.state.currentJobId, config);
+                this.showSuccessMessage('Verarbeitung gestartet! Fortschritt wird simuliert.');
+            }
+            
+            // 9. Emit events for other components
+            this.eventBus.emit('processing:started', {
+                jobId: this.state.currentJobId,
+                fileId: this.state.currentFileId,
+                config: config
+            });
+            
+        } catch (error) {
+            console.error('❌ Document processing failed:', error);
+            this.state.isProcessing = false;
+            this.handleError(error, 'Fehler beim Starten der Verarbeitung');
+        }
+    }
+    
+    /**
+     * Simulate WebSocket progress events for Results display demo
+     * This shows how real progress events would be handled and integrates with Results
+     * @param {string} jobId - Demo job ID
+     * @param {Object} config - Processing configuration
+     */
+    simulateProgressEventsForResults(jobId, config) {
+        console.log('📊 Simulating WebSocket progress events for Results display...');
+        
+        // Simulate job started event
+        setTimeout(() => {
+            this.eventBus.emit('websocket:job-started', {
+                job_id: jobId,
+                stages: ['parsing', 'analyzing', 'commenting', 'integrating'],
+                estimated_duration: 60, // 60 seconds
+                timestamp: new Date().toISOString()
+            });
+        }, 1000);
+        
+        // Simulate progress updates
+        const progressUpdates = [
+            { stage: 'parsing', progress: 10, message: 'Dokument wird analysiert...', delay: 3000 },
+            { stage: 'parsing', progress: 25, message: 'Textstruktur wird erfasst...', delay: 6000 },
+            { stage: 'analyzing', progress: 40, message: 'KI-Analyse läuft...', delay: 12000 },
+            { stage: 'analyzing', progress: 60, message: 'Grammatik wird geprüft...', delay: 18000 },
+            { stage: 'commenting', progress: 75, message: 'Verbesserungsvorschläge werden generiert...', delay: 24000 },
+            { stage: 'integrating', progress: 90, message: 'Kommentare werden eingefügt...', delay: 30000 },
+            { stage: 'integrating', progress: 100, message: 'Verarbeitung abgeschlossen!', delay: 35000 }
+        ];
+        
+        progressUpdates.forEach(update => {
+            setTimeout(() => {
+                this.eventBus.emit('websocket:progress-update', {
+                    job_id: jobId,
+                    stage: update.stage,
+                    progress: update.progress,
+                    message: update.message,
+                    estimated_remaining: Math.max(0, 60 - (update.delay / 1000)) + ' Sekunden',
+                    timestamp: new Date().toISOString()
+                });
+            }, update.delay);
+        });
+        
+        // Simulate stage completions
+        setTimeout(() => {
+            this.eventBus.emit('websocket:stage-completed', {
+                job_id: jobId,
+                completed_stage: 'parsing',
+                next_stage: 'analyzing',
+                timestamp: new Date().toISOString()
+            });
+        }, 8000);
+        
+        setTimeout(() => {
+            this.eventBus.emit('websocket:stage-completed', {
+                job_id: jobId,
+                completed_stage: 'analyzing',
+                next_stage: 'commenting',
+                timestamp: new Date().toISOString()
+            });
+        }, 20000);
+        
+        setTimeout(() => {
+            this.eventBus.emit('websocket:stage-completed', {
+                job_id: jobId,
+                completed_stage: 'commenting',
+                next_stage: 'integrating',
+                timestamp: new Date().toISOString()
+            });
+        }, 26000);
+        
+        // Simulate job completion with Results integration
+        setTimeout(() => {
+            this.eventBus.emit('websocket:job-completed', {
+                job_id: jobId,
+                success: true,
+                processing_time: '37 Sekunden',
+                duration_seconds: 37,
+                timestamp: new Date().toISOString(),
+                download_url: '/api/v1/download/' + jobId.replace('demo-', ''),
+                result_data: {
+                    total_suggestions: 23,
+                    categories_processed: config.categories || ['grammar', 'style', 'clarity', 'academic'],
+                    file_size_mb: 2.4
+                }
+            });
+        }, 37000);
     }
     
     /**

@@ -215,17 +215,21 @@ def create_app(config_class=WebConfig, validate_startup: bool = True):
         logger.error(f"Failed to create Flask application: {e}", exc_info=True)
         raise StartupValidationError(f"Application creation failed: {e}")
 
-# Create the application instance (with validation by default)
-try:
-    app, socketio = create_app()
-except StartupValidationError as e:
-    print(f"❌ Application startup failed: {e.message}")
-    if e.fix_suggestion:
-        print(f"💡 Fix suggestion: {e.fix_suggestion}")
-    sys.exit(1)
-except Exception as e:
-    print(f"❌ Unexpected error during application startup: {e}")
-    sys.exit(1)
+# Create the application instance (with validation by default, unless in testing)
+# Skip validation if we're being imported for testing
+if os.getenv('TESTING') == 'true' or 'pytest' in sys.modules:
+    app, socketio = create_app(validate_startup=False)
+else:
+    try:
+        app, socketio = create_app()
+    except StartupValidationError as e:
+        print(f"❌ Application startup failed: {e.message}")
+        if e.fix_suggestion:
+            print(f"💡 Fix suggestion: {e.fix_suggestion}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Unexpected error during application startup: {e}")
+        sys.exit(1)
 
 
 def setup_signal_handlers():

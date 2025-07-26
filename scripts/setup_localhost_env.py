@@ -436,10 +436,11 @@ class LocalhostEnvironmentValidator:
         # Check SocketIO
         try:
             import flask_socketio
+            version = getattr(flask_socketio, '__version__', 'unknown')
             self.add_result(ValidationResult(
                 "SocketIO Import",
                 ValidationStatus.PASS,
-                f"Flask-SocketIO {flask_socketio.__version__} imports successfully",
+                f"Flask-SocketIO {version} imports successfully",
                 "WebSocket support ready"
             ))
         except ImportError as e:

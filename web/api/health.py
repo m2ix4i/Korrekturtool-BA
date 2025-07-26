@@ -192,9 +192,10 @@ class HealthChecker:
         # Check SocketIO
         try:
             import flask_socketio
+            version = getattr(flask_socketio, '__version__', 'unknown')
             services["websocket"] = {
                 "status": "pass",
-                "version": flask_socketio.__version__,
+                "version": version,
                 "message": "WebSocket support ready"
             }
         except ImportError as e:
