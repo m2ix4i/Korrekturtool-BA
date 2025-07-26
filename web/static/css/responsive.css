@@ -1,0 +1,504 @@
+/**
+ * Responsive CSS - Mobile-first responsive design system
+ * Korrekturtool für Wissenschaftliche Arbeiten
+ * CSS Grid and Flexbox based responsive layout
+ */
+
+/* ========================================
+   Breakpoint System
+   ======================================== */
+:root {
+    /* Breakpoint definitions */
+    --breakpoint-xs: 0;
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --breakpoint-xxl: 1400px;
+    
+    /* Container widths */
+    --container-sm: 540px;
+    --container-md: 720px;
+    --container-lg: 960px;
+    --container-xl: 1140px;
+    --container-xxl: 1320px;
+    
+    /* Grid system */
+    --grid-columns: 12;
+    --grid-gutter-x: 1.5rem;
+    --grid-gutter-y: 0;
+}
+
+/* ========================================
+   Base Mobile-First Layout
+   ======================================== */
+
+/* Extra small devices (phones, less than 576px) */
+.app-container {
+    margin: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+}
+
+.app-main {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+}
+
+/* Configuration rows stack on mobile */
+.config-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+}
+
+.config-row label {
+    min-width: auto;
+    margin-bottom: var(--spacing-xs);
+}
+
+.config-row select,
+.config-row input {
+    max-width: none;
+}
+
+/* Button stacking on mobile */
+.config-actions .btn,
+.result-actions .btn {
+    display: block;
+    width: 100%;
+    margin-left: 0;
+    margin-bottom: var(--spacing-sm);
+}
+
+.config-actions .btn:last-child,
+.result-actions .btn:last-child {
+    margin-bottom: 0;
+}
+
+/* Upload area adjustments for mobile */
+.upload-area {
+    padding: var(--spacing-lg) var(--spacing-md);
+}
+
+.upload-icon {
+    font-size: 36px;
+    margin-bottom: var(--spacing-md);
+}
+
+.upload-text {
+    font-size: var(--font-size-base);
+}
+
+/* Theme toggle positioning for mobile */
+.theme-toggle {
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    padding: var(--spacing-xs);
+}
+
+.theme-toggle-icon {
+    font-size: 18px;
+}
+
+/* ========================================
+   Small Devices (landscape phones, 576px and up)
+   ======================================== */
+@media (min-width: 576px) {
+    .app-container {
+        margin: var(--spacing-md);
+        padding: var(--spacing-lg);
+        max-width: var(--container-sm);
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .app-main {
+        gap: var(--spacing-lg);
+    }
+    
+    /* Configuration rows can be horizontal */
+    .config-row {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+    
+    .config-row label {
+        flex: 0 0 120px;
+        margin-bottom: 0;
+    }
+    
+    /* Buttons can be inline again */
+    .config-actions .btn,
+    .result-actions .btn {
+        display: inline-block;
+        width: auto;
+        margin-left: var(--spacing-sm);
+        margin-bottom: 0;
+    }
+    
+    .config-actions .btn:first-child,
+    .result-actions .btn:first-child {
+        margin-left: 0;
+    }
+    
+    /* Upload area improvements */
+    .upload-area {
+        padding: var(--spacing-xxl) var(--spacing-lg);
+    }
+    
+    .upload-icon {
+        font-size: 42px;
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .upload-text {
+        font-size: var(--font-size-large);
+    }
+}
+
+/* ========================================
+   Medium Devices (tablets, 768px and up)
+   ======================================== */
+@media (min-width: 768px) {
+    .app-container {
+        margin: var(--spacing-lg);
+        padding: var(--spacing-xl);
+        max-width: var(--container-md);
+        border-radius: var(--border-radius-lg);
+    }
+    
+    .app-main {
+        gap: var(--spacing-xl);
+    }
+    
+    /* Configuration with better spacing */
+    .config-row label {
+        flex: 0 0 140px;
+    }
+    
+    .config-row select,
+    .config-row input {
+        max-width: 300px;
+    }
+    
+    /* Upload area full design */
+    .upload-area {
+        padding: var(--spacing-xxl) var(--spacing-xl);
+    }
+    
+    .upload-icon {
+        font-size: 48px;
+    }
+    
+    /* Theme toggle better positioning */
+    .theme-toggle {
+        top: var(--spacing-lg);
+        right: var(--spacing-lg);
+        padding: var(--spacing-sm);
+    }
+    
+    .theme-toggle-icon {
+        font-size: 20px;
+    }
+    
+    /* Typography improvements */
+    h1 {
+        font-size: calc(var(--font-size-h1) * 1.1);
+    }
+    
+    .subtitle {
+        font-size: calc(var(--font-size-base) * 1.1);
+    }
+}
+
+/* ========================================
+   Large Devices (desktops, 992px and up)
+   ======================================== */
+@media (min-width: 992px) {
+    .app-container {
+        margin: var(--spacing-xl) auto;
+        padding: var(--spacing-xxl);
+        max-width: var(--container-lg);
+    }
+    
+    /* Grid layout for larger screens */
+    .app-main {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xl);
+    }
+    
+    /* Configuration section with better layout */
+    .config-section {
+        padding: var(--spacing-xl);
+    }
+    
+    .config-row {
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    /* Progress section enhancements */
+    .progress-section {
+        padding: var(--spacing-xl);
+    }
+    
+    .progress-bar {
+        height: 10px;
+    }
+    
+    /* Results section improvements */
+    .results-section {
+        padding: var(--spacing-xl);
+    }
+    
+    .result-item {
+        padding: var(--spacing-xl);
+    }
+    
+    /* Upload area maximum design */
+    .upload-area {
+        padding: calc(var(--spacing-xxl) * 1.5) var(--spacing-xxl);
+    }
+    
+    /* Typography scaling */
+    h1 {
+        font-size: calc(var(--font-size-h1) * 1.2);
+    }
+    
+    h3 {
+        font-size: calc(var(--font-size-h3) * 1.1);
+    }
+}
+
+/* ========================================
+   Extra Large Devices (large desktops, 1200px and up)
+   ======================================== */
+@media (min-width: 1200px) {
+    .app-container {
+        max-width: var(--container-max-width);
+        padding: calc(var(--spacing-xxl) * 1.5);
+    }
+    
+    /* Full desktop experience */
+    .app-main {
+        gap: calc(var(--spacing-xl) * 1.5);
+    }
+    
+    /* Configuration with maximum spacing */
+    .config-section {
+        padding: calc(var(--spacing-xl) * 1.5);
+    }
+    
+    .config-row label {
+        flex: 0 0 160px;
+    }
+    
+    /* Upload area premium design */
+    .upload-area {
+        padding: calc(var(--spacing-xxl) * 2) calc(var(--spacing-xxl) * 1.5);
+    }
+    
+    /* Typography maximum scaling */
+    h1 {
+        font-size: calc(var(--font-size-h1) * 1.3);
+        margin-bottom: var(--spacing-md);
+    }
+}
+
+/* ========================================
+   Responsive Grid System
+   ======================================== */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: calc(var(--grid-gutter-x) * -0.5);
+    margin-left: calc(var(--grid-gutter-x) * -0.5);
+}
+
+.col {
+    flex: 1 0 0%;
+    padding-right: calc(var(--grid-gutter-x) * 0.5);
+    padding-left: calc(var(--grid-gutter-x) * 0.5);
+}
+
+/* Grid columns */
+.col-1 { flex: 0 0 auto; width: 8.33333333%; }
+.col-2 { flex: 0 0 auto; width: 16.66666667%; }
+.col-3 { flex: 0 0 auto; width: 25%; }
+.col-4 { flex: 0 0 auto; width: 33.33333333%; }
+.col-5 { flex: 0 0 auto; width: 41.66666667%; }
+.col-6 { flex: 0 0 auto; width: 50%; }
+.col-7 { flex: 0 0 auto; width: 58.33333333%; }
+.col-8 { flex: 0 0 auto; width: 66.66666667%; }
+.col-9 { flex: 0 0 auto; width: 75%; }
+.col-10 { flex: 0 0 auto; width: 83.33333333%; }
+.col-11 { flex: 0 0 auto; width: 91.66666667%; }
+.col-12 { flex: 0 0 auto; width: 100%; }
+
+/* ========================================
+   Responsive Utilities
+   ======================================== */
+
+/* Display utilities */
+@media (max-width: 575.98px) {
+    .d-sm-none { display: none !important; }
+    .d-sm-block { display: block !important; }
+    .d-sm-flex { display: flex !important; }
+    .d-sm-grid { display: grid !important; }
+}
+
+@media (max-width: 767.98px) {
+    .d-md-none { display: none !important; }
+    .d-md-block { display: block !important; }
+    .d-md-flex { display: flex !important; }
+    .d-md-grid { display: grid !important; }
+}
+
+@media (max-width: 991.98px) {
+    .d-lg-none { display: none !important; }
+    .d-lg-block { display: block !important; }
+    .d-lg-flex { display: flex !important; }
+    .d-lg-grid { display: grid !important; }
+}
+
+/* Text alignment utilities */
+@media (max-width: 575.98px) {
+    .text-sm-left { text-align: left !important; }
+    .text-sm-center { text-align: center !important; }
+    .text-sm-right { text-align: right !important; }
+}
+
+@media (max-width: 767.98px) {
+    .text-md-left { text-align: left !important; }
+    .text-md-center { text-align: center !important; }
+    .text-md-right { text-align: right !important; }
+}
+
+/* ========================================
+   Container Queries (Future Enhancement)
+   ======================================== */
+@supports (container-type: inline-size) {
+    .app-container {
+        container-type: inline-size;
+        container-name: app;
+    }
+    
+    @container app (min-width: 600px) {
+        .config-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: var(--spacing-md);
+            align-items: center;
+        }
+    }
+    
+    @container app (min-width: 800px) {
+        .result-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: var(--spacing-lg);
+            align-items: start;
+        }
+        
+        .result-actions {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+    }
+}
+
+/* ========================================
+   Responsive Images and Media
+   ======================================== */
+img,
+svg,
+video,
+iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ========================================
+   Touch-Friendly Interactions
+   ======================================== */
+@media (hover: none) and (pointer: coarse) {
+    /* Touch devices */
+    .btn {
+        min-height: 44px;
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+    
+    .upload-area {
+        padding: var(--spacing-xxl) var(--spacing-lg);
+        border-width: 3px;
+    }
+    
+    .theme-toggle {
+        min-width: 44px;
+        min-height: 44px;
+        padding: var(--spacing-md);
+    }
+    
+    /* Remove hover effects on touch devices */
+    .btn:hover,
+    .upload-area:hover,
+    .theme-toggle:hover {
+        transform: none;
+    }
+}
+
+/* ========================================
+   Orientation Changes
+   ======================================== */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+    /* Landscape mobile optimization */
+    .upload-area {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+    
+    .upload-icon {
+        font-size: 32px;
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .app-container {
+        margin: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+}
+
+/* ========================================
+   Print Styles
+   ======================================== */
+@media print {
+    .app-container {
+        margin: 0;
+        padding: 20px;
+        max-width: none;
+        box-shadow: none;
+        border-radius: 0;
+    }
+    
+    .theme-toggle,
+    .btn,
+    .upload-area,
+    .config-section {
+        display: none;
+    }
+    
+    .results-section {
+        display: block !important;
+        background: none !important;
+        padding: 0;
+    }
+    
+    .result-item {
+        border: 1px solid #ccc;
+        background: none !important;
+        page-break-inside: avoid;
+    }
+}
