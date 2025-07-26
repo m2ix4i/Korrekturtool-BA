@@ -137,7 +137,7 @@ class TestAdvancedWordIntegrator:
         integrator = AdvancedWordIntegrator(str(doc_path))
         
         # Comment with special characters
-        special_comment = "Umlaute: äöüß, Anführungszeichen: „deutsch""
+        special_comment = "Umlaute: äöüß, Anführungszeichen: 'deutsch'"
         
         result = integrator.add_comment(
             text="Test",

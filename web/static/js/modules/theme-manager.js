@@ -12,6 +12,9 @@ export class ThemeManager {
             AUTO: 'auto'
         };
         
+        // Define theme cycle order
+        this.themeOrder = [this.themes.AUTO, this.themes.LIGHT, this.themes.DARK];
+        
         this.currentTheme = this.themes.AUTO;
         this.systemPreference = null;
         this.storageKey = 'korrekturtool-theme-preference';
@@ -126,19 +129,11 @@ export class ThemeManager {
      * Cycle through themes: auto -> light -> dark -> auto
      */
     cycleTheme() {
-        switch (this.currentTheme) {
-            case this.themes.AUTO:
-                this.setTheme(this.themes.LIGHT);
-                break;
-            case this.themes.LIGHT:
-                this.setTheme(this.themes.DARK);
-                break;
-            case this.themes.DARK:
-                this.setTheme(this.themes.AUTO);
-                break;
-            default:
-                this.setTheme(this.themes.AUTO);
-        }
+        const currentIndex = this.themeOrder.indexOf(this.currentTheme);
+        const nextIndex = (currentIndex + 1) % this.themeOrder.length;
+        const nextTheme = this.themeOrder[nextIndex];
+        
+        this.setTheme(nextTheme);
     }
     
     /**

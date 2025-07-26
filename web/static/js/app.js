@@ -7,6 +7,7 @@
 // Import core modules
 import { ThemeManager } from './modules/theme-manager.js';
 import { EventBus } from './utils/event-bus.js';
+import { UploadHandler } from './handlers/upload-handler.js';
 
 /**
  * Main Application Class
@@ -20,6 +21,7 @@ class KorrekturtoolApp {
         // Core system components
         this.eventBus = new EventBus();
         this.themeManager = null;
+        this.uploadHandler = null;
         
         // Application state
         this.state = {
@@ -32,21 +34,32 @@ class KorrekturtoolApp {
         // DOM elements cache
         this.elements = {};
         
-        // Performance monitoring
-        this.performanceMetrics = {
-            initStart: performance.now(),
-            initEnd: null,
-            loadTime: null
-        };
-        
         console.log(`🚀 Korrekturtool App v${this.version} initializing...`);
         
         // Initialize when DOM is ready
+        this.initializeWhenReady();
+    }
+    
+    /**
+     * Initialize application when DOM is ready
+     */
+    initializeWhenReady() {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
             this.init();
         }
+    }
+    
+    /**
+     * Initialize performance monitoring
+     */
+    initializePerformanceMonitoring() {
+        this.performanceMetrics = {
+            initStart: performance.now(),
+            initEnd: null,
+            loadTime: null
+        };
     }
     
     /**
@@ -56,8 +69,11 @@ class KorrekturtoolApp {
         try {
             console.log('🔄 Initializing application components...');
             
+            // Initialize performance monitoring
+            this.initializePerformanceMonitoring();
+            
             // Cache DOM elements
-            this.cacheElements();
+            this.initializeDOMCache();
             
             // Initialize core modules
             await this.initializeModules();
@@ -71,22 +87,8 @@ class KorrekturtoolApp {
             // Initialize component visibility
             this.initializeComponentVisibility();
             
-            // Performance monitoring
-            this.performanceMetrics.initEnd = performance.now();
-            this.performanceMetrics.loadTime = this.performanceMetrics.initEnd - this.performanceMetrics.initStart;
-            
-            this.initialized = true;
-            
-            console.log(`✅ Application initialized in ${Math.round(this.performanceMetrics.loadTime)}ms`);
-            
-            // Emit initialization complete event
-            this.eventBus.emit('app:initialized', {
-                version: this.version,
-                loadTime: this.performanceMetrics.loadTime
-            });
-            
-            // Test API connectivity
-            this.testAPIConnectivity();
+            // Finalize initialization
+            this.finalizeInitialization();
             
         } catch (error) {
             console.error('❌ Application initialization failed:', error);
@@ -95,33 +97,74 @@ class KorrekturtoolApp {
     }
     
     /**
-     * Cache DOM elements for performance
+     * Initialize DOM element caching
      */
-    cacheElements() {
-        // Main sections
+    initializeDOMCache() {
+        this.cacheMainSections();
+        this.cacheFormElements();
+        this.cacheProgressElements();
+        this.cacheMessageContainers();
+    }
+    
+    /**
+     * Finalize initialization process
+     */
+    finalizeInitialization() {
+        // Performance monitoring
+        this.performanceMetrics.initEnd = performance.now();
+        this.performanceMetrics.loadTime = this.performanceMetrics.initEnd - this.performanceMetrics.initStart;
+        
+        this.initialized = true;
+        
+        console.log(`✅ Application initialized in ${Math.round(this.performanceMetrics.loadTime)}ms`);
+        
+        // Emit initialization complete event
+        this.eventBus.emit('app:initialized', {
+            version: this.version,
+            loadTime: this.performanceMetrics.loadTime
+        });
+        
+        // Test API connectivity
+        this.testAPIConnectivity();
+    }
+    
+    /**
+     * Cache main application sections
+     */
+    cacheMainSections() {
         this.elements.uploadArea = document.getElementById('uploadArea');
         this.elements.fileInput = document.getElementById('fileInput');
         this.elements.configSection = document.getElementById('configSection');
         this.elements.progressSection = document.getElementById('progressSection');
         this.elements.resultsSection = document.getElementById('resultsSection');
-        
-        // Form elements
+    }
+    
+    /**
+     * Cache form-related elements
+     */
+    cacheFormElements() {
         this.elements.processingForm = document.getElementById('processingForm');
         this.elements.processingMode = document.getElementById('processingMode');
         this.elements.analysisCategories = document.getElementById('analysisCategories');
         this.elements.outputFilename = document.getElementById('outputFilename');
         this.elements.startProcessing = document.getElementById('startProcessing');
         this.elements.cancelUpload = document.getElementById('cancelUpload');
-        
-        // Progress elements
+    }
+    
+    /**
+     * Cache progress tracking elements
+     */
+    cacheProgressElements() {
         this.elements.progressFill = document.getElementById('progressFill');
         this.elements.progressText = document.getElementById('progressText');
         this.elements.statusBadge = document.getElementById('statusBadge');
-        
-        // Result elements
         this.elements.resultsList = document.getElementById('resultsList');
-        
-        // Message containers
+    }
+    
+    /**
+     * Cache message and notification containers
+     */
+    cacheMessageContainers() {
         this.elements.errorContainer = document.getElementById('errorContainer');
         this.elements.successContainer = document.getElementById('successContainer');
         this.elements.ariaLivePolite = document.getElementById('ariaLivePolite');
@@ -137,54 +180,50 @@ class KorrekturtoolApp {
         // Initialize theme manager
         this.themeManager = new ThemeManager();
         
+        // Initialize upload handler
+        this.uploadHandler = new UploadHandler(
+            this.elements.uploadArea,
+            this.elements.fileInput,
+            this.eventBus
+        );
+        
         // Listen for theme changes
         this.themeManager.onThemeChange((event) => {
             this.eventBus.emit('theme:changed', event.detail);
         });
         
+        // Listen for upload events
+        this.setupUploadEventListeners();
+        
         console.log('🧩 Core modules initialized');
+    }
+    
+    /**
+     * Setup upload-related event listeners
+     */
+    setupUploadEventListeners() {
+        this.eventBus.on('upload:file-selected', (data) => {
+            console.log('📁 File selected:', data.name);
+            // Show configuration section when file is selected
+            if (this.elements.configSection) {
+                this.elements.configSection.classList.add('active');
+            }
+        });
+        
+        this.eventBus.on('upload:error', (data) => {
+            this.showErrorMessage(data.message);
+        });
+        
+        this.eventBus.on('upload:reset', () => {
+            this.resetApplication();
+        });
     }
     
     /**
      * Setup global event listeners
      */
     setupGlobalEventListeners() {
-        // File upload event listeners (basic setup for Phase 1)
-        if (this.elements.uploadArea) {
-            this.elements.uploadArea.addEventListener('click', () => {
-                if (this.elements.fileInput) {
-                    this.elements.fileInput.click();
-                }
-            });
-            
-            // Keyboard accessibility for upload area
-            this.elements.uploadArea.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (this.elements.fileInput) {
-                        this.elements.fileInput.click();
-                    }
-                }
-            });
-            
-            // Drag and drop events (placeholder for Phase 2)
-            this.elements.uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                this.elements.uploadArea.classList.add('dragover');
-            });
-            
-            this.elements.uploadArea.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                this.elements.uploadArea.classList.remove('dragover');
-            });
-            
-            this.elements.uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                this.elements.uploadArea.classList.remove('dragover');
-                // File handling will be implemented in Phase 2
-                console.log('📁 File drop detected (handler to be implemented)');
-            });
-        }
+        // Note: Upload handling is now managed by UploadHandler class
         
         // Form submission (placeholder for Phase 2)
         if (this.elements.processingForm) {
@@ -390,9 +429,9 @@ class KorrekturtoolApp {
             this.elements.processingForm.reset();
         }
         
-        // Reset file input
-        if (this.elements.fileInput) {
-            this.elements.fileInput.value = '';
+        // Reset upload handler
+        if (this.uploadHandler) {
+            this.uploadHandler.reset();
         }
         
         // Hide sections
@@ -404,20 +443,6 @@ class KorrekturtoolApp {
         }
         if (this.elements.successContainer) {
             this.elements.successContainer.style.display = 'none';
-        }
-        
-        // Reset upload area
-        if (this.elements.uploadArea) {
-            this.elements.uploadArea.classList.remove('disabled', 'dragover');
-            const uploadText = this.elements.uploadArea.querySelector('.upload-text');
-            const uploadSubtext = this.elements.uploadArea.querySelector('.upload-subtext');
-            
-            if (uploadText) {
-                uploadText.textContent = 'DOCX-Datei hier ablegen oder klicken zum Auswählen';
-            }
-            if (uploadSubtext) {
-                uploadSubtext.textContent = 'Unterstützt werden Word-Dokumente bis 50 MB';
-            }
         }
         
         // Emit reset event
@@ -449,6 +474,10 @@ class KorrekturtoolApp {
         // Destroy modules
         if (this.themeManager) {
             this.themeManager.destroy();
+        }
+        
+        if (this.uploadHandler) {
+            this.uploadHandler.destroy();
         }
         
         if (this.eventBus) {
