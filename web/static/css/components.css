@@ -116,12 +116,14 @@
     font-weight: var(--font-weight-medium);
     margin-bottom: var(--spacing-sm);
     color: var(--text-color);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .upload-subtext {
     color: var(--text-secondary);
     font-size: var(--font-size-small);
     font-weight: var(--font-weight-normal);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* ========================================
@@ -141,6 +143,7 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    font-weight: var(--font-weight-bold);
 }
 
 .config-row {
@@ -160,6 +163,7 @@
     min-width: 140px;
     margin-bottom: 0;
     font-weight: var(--font-weight-medium);
+    color: var(--text-color);
 }
 
 .config-row select,
@@ -253,7 +257,7 @@
 
 .progress-text {
     text-align: center;
-    color: var(--text-secondary);
+    color: var(--text-color);
     font-size: var(--font-size-small);
     margin-bottom: var(--spacing-md);
     font-weight: var(--font-weight-medium);
